@@ -1,0 +1,31 @@
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.local
+.env.*.local
+
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# pocketbase
+backend/pb_data
+backend/pb_migrations/journal
+backend/pb.exe
+backend/pocketbase
+backend/pocketbase.exe
+backend/pb.log
+backend/pb-err.log
+
+# vite / typescript logs and build cache
+vite.log
+vite-err.log
+*.tsbuildinfo
