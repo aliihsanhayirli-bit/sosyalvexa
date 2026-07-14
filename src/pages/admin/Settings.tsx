@@ -1,31 +1,99 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import { Save, Phone, Mail, MapPin, MessageCircle, Facebook, Instagram, Building2 } from 'lucide-react';
+import { Save, Phone, Mail, MapPin, MessageCircle, Facebook, Instagram, Building2, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Form';
 import { COMPANY } from '@/lib/constants';
+import { pb } from '@/lib/pb';
+
+interface SettingsRecord {
+  id: string;
+  company_name?: string;
+  brand?: string;
+  tagline?: string;
+  description?: string;
+  phone?: string;
+  email?: string;
+  address?: string;
+  hours?: string;
+  facebook?: string;
+  instagram?: string;
+  whatsapp?: string;
+}
+
+const EMPTY: Omit<SettingsRecord, 'id'> = {
+  company_name: COMPANY.name,
+  brand: COMPANY.brand,
+  tagline: COMPANY.tagline,
+  phone: COMPANY.phone,
+  email: COMPANY.email,
+  address: COMPANY.address,
+  description: COMPANY.description,
+  hours: COMPANY.hours,
+  facebook: COMPANY.social.facebook,
+  instagram: COMPANY.social.instagram,
+  whatsapp: '',
+};
 
 export default function AdminSettings() {
-  const [form, setForm] = useState<{
-    name: string; brand: string; tagline: string; phone: string; email: string;
-    address: string; facebook: string; instagram: string; description: string; hours: string;
-  }>({
-    name: COMPANY.name,
-    brand: COMPANY.brand,
-    tagline: COMPANY.tagline,
-    phone: COMPANY.phone,
-    email: COMPANY.email,
-    address: COMPANY.address,
-    facebook: COMPANY.social.facebook,
-    instagram: COMPANY.social.instagram,
-    description: COMPANY.description,
-    hours: COMPANY.hours,
-  });
+  const [id, setId] = useState<string | null>(null);
+  const [form, setForm] = useState<Omit<SettingsRecord, 'id'>>(EMPTY);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const save = () => {
-    toast.success('Ayarlar kaydedildi (yerel önizleme)');
+  useEffect(() => {
+    (async () => {
+      try {
+        const list = await pb.collection('settings').getList<SettingsRecord>(1, 1);
+        if (list.items.length > 0) {
+          const r = list.items[0];
+          setId(r.id);
+          setForm({
+            company_name: r.company_name ?? COMPANY.name,
+            brand: r.brand ?? COMPANY.brand,
+            tagline: r.tagline ?? COMPANY.tagline,
+            description: r.description ?? COMPANY.description,
+            phone: r.phone ?? COMPANY.phone,
+            email: r.email ?? COMPANY.email,
+            address: r.address ?? COMPANY.address,
+            hours: r.hours ?? COMPANY.hours,
+            facebook: r.facebook ?? COMPANY.social.facebook,
+            instagram: r.instagram ?? COMPANY.social.instagram,
+            whatsapp: r.whatsapp ?? '',
+          });
+        } else {
+          const created = await pb.collection('settings').create<SettingsRecord>({ ...EMPTY, singleton: true } as never);
+          setId(created.id);
+        }
+      } catch (e) {
+        toast.error('Ayarlar yüklenemedi: ' + (e as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const save = async () => {
+    if (!id) return;
+    setSaving(true);
+    try {
+      await pb.collection('settings').update<SettingsRecord>(id, { ...form, singleton: true } as never);
+      toast.success('Ayarlar kaydedildi');
+    } catch (e) {
+      toast.error('Kayıt hatası: ' + (e as Error).message);
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8">
@@ -42,19 +110,19 @@ export default function AdminSettings() {
           <CardContent className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium">Ticari Ünvan</label>
-              <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
+              <Input value={form.company_name ?? ''} onChange={(e) => setForm((f) => ({ ...f, company_name: e.target.value }))} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Marka Adı</label>
-              <Input value={form.brand} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} />
+              <Input value={form.brand ?? ''} onChange={(e) => setForm((f) => ({ ...f, brand: e.target.value }))} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Slogan</label>
-              <Input value={form.tagline} onChange={(e) => setForm((f) => ({ ...f, tagline: e.target.value }))} />
+              <Input value={form.tagline ?? ''} onChange={(e) => setForm((f) => ({ ...f, tagline: e.target.value }))} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Açıklama</label>
-              <Textarea rows={3} value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
+              <Textarea rows={3} value={form.description ?? ''} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} />
             </div>
           </CardContent>
         </Card>
@@ -66,19 +134,23 @@ export default function AdminSettings() {
           <CardContent className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium">Telefon</label>
-              <Input value={form.phone} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
+              <Input value={form.phone ?? ''} onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">E-posta</label>
-              <Input type="email" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+              <Input type="email" value={form.email ?? ''} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Adres</label>
-              <Input value={form.address} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} />
+              <Input value={form.address ?? ''} onChange={(e) => setForm((f) => ({ ...f, address: e.target.value }))} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Çalışma Saatleri</label>
-              <Input value={form.hours} onChange={(e) => setForm((f) => ({ ...f, hours: e.target.value }))} />
+              <Input value={form.hours ?? ''} onChange={(e) => setForm((f) => ({ ...f, hours: e.target.value }))} />
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium">WhatsApp Numarası</label>
+              <Input value={form.whatsapp ?? ''} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} placeholder="905456551070" />
             </div>
           </CardContent>
         </Card>
@@ -90,11 +162,11 @@ export default function AdminSettings() {
           <CardContent className="space-y-4">
             <div>
               <label className="mb-1.5 block text-sm font-medium">Facebook</label>
-              <Input value={form.facebook} onChange={(e) => setForm((f) => ({ ...f, facebook: e.target.value }))} />
+              <Input value={form.facebook ?? ''} onChange={(e) => setForm((f) => ({ ...f, facebook: e.target.value }))} />
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">Instagram</label>
-              <Input value={form.instagram} onChange={(e) => setForm((f) => ({ ...f, instagram: e.target.value }))} />
+              <Input value={form.instagram ?? ''} onChange={(e) => setForm((f) => ({ ...f, instagram: e.target.value }))} />
             </div>
           </CardContent>
         </Card>
@@ -125,8 +197,9 @@ export default function AdminSettings() {
       </div>
 
       <div className="mt-6 flex justify-end">
-        <Button variant="gold" size="lg" onClick={save}>
-          <Save className="h-4 w-4" /> Tüm Ayarları Kaydet
+        <Button variant="gold" size="lg" onClick={save} disabled={saving || !id}>
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          Tüm Ayarları Kaydet
         </Button>
       </div>
     </div>

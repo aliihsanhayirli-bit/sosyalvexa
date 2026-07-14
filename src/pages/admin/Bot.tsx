@@ -1,28 +1,35 @@
-import { useState, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
-import { Upload, FileText, Trash2, Sparkles, Bot, Save, Loader2, X, Search } from 'lucide-react';
+import { Upload, FileText, Trash2, Sparkles, Bot, Save, Loader2, Search } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Form';
 import { Badge } from '@/components/ui/Badge';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { pb } from '@/lib/pb';
 
 interface Doc {
   id: string;
+  collectionId: string;
   title: string;
   source: string;
-  chunkCount: number;
+  chunk_count: number;
   active: boolean;
   created: string;
+  file: string;
   filename: string;
 }
 
-const DEMO_DOCS: Doc[] = [
-  { id: 'd1', title: 'YCA Şirket Broşürü', source: 'YCA_2024.pdf', chunkCount: 24, active: true, created: '2024-12-10', filename: 'brochure.pdf' },
-  { id: 'd2', title: 'Sıkça Sorulan Sorular', source: 'sss.md', chunkCount: 18, active: true, created: '2024-12-12', filename: 'faq.md' },
-  { id: 'd3', title: 'Temelli Bölge Raporu 2024', source: 'temelli_2024.pdf', chunkCount: 42, active: true, created: '2024-12-14', filename: 'temelli.pdf' },
-];
+interface BotSettings {
+  id: string;
+  system_prompt: string;
+  welcome_message: string;
+  model: string;
+  enabled: boolean;
+  temperature: number;
+  rag_top_k: number;
+}
 
 const DEFAULT_PROMPT = `Sen YCA Yatırım'ın yapay zeka danışmanısın. Ankara Temelli ve çevresinde arsa alım-satımı konusunda uzman bir firmayız. Görevin:
 
@@ -46,50 +53,130 @@ const DEFAULT_WELCOME = `Merhaba 👋 YCA Yatırım'a hoş geldiniz! Ankara Teme
 Size nasıl yardımcı olabilirim? Arsa almak mı, satmak mı istiyorsunuz?`;
 
 export default function AdminBot() {
-  const [docs, setDocs] = useState<Doc[]>(DEMO_DOCS);
+  const [docs, setDocs] = useState<Doc[]>([]);
+  const [settingsId, setSettingsId] = useState<string | null>(null);
   const [systemPrompt, setSystemPrompt] = useState(DEFAULT_PROMPT);
   const [welcome, setWelcome] = useState(DEFAULT_WELCOME);
+  const [model, setModel] = useState('gemini-1.5-flash');
+  const [enabled, setEnabled] = useState(true);
   const [uploading, setUploading] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testMsg, setTestMsg] = useState('');
   const [testResult, setTestResult] = useState('');
+  const [loading, setLoading] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   const modelName = import.meta.env.VITE_GEMINI_MODEL || 'gemini-1.5-flash';
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const [settingsList, docsList] = await Promise.all([
+          pb.collection('bot_settings').getList<BotSettings>(1, 1),
+          pb.collection('bot_documents').getList<Doc>(1, 100, { sort: '-created' }),
+        ]);
+
+        if (settingsList.items.length > 0) {
+          const s = settingsList.items[0];
+          setSettingsId(s.id);
+          setSystemPrompt(s.system_prompt || DEFAULT_PROMPT);
+          setWelcome(s.welcome_message || DEFAULT_WELCOME);
+          setModel(s.model || modelName);
+          setEnabled(s.enabled ?? true);
+        } else {
+          const created = await pb.collection('bot_settings').create<BotSettings>({
+            system_prompt: DEFAULT_PROMPT,
+            welcome_message: DEFAULT_WELCOME,
+            model: modelName,
+            enabled: true,
+            temperature: 0.7,
+            rag_top_k: 4,
+          } as never);
+          setSettingsId(created.id);
+        }
+
+        setDocs(
+          docsList.items.map((d) => ({
+            ...d,
+            filename: d.file ? d.file.split('/').pop() || d.file : d.source,
+          })),
+        );
+      } catch (e) {
+        toast.error('Bot ayarları yüklenemedi: ' + (e as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [modelName]);
+
   const handleUpload = async (files: FileList | null) => {
-    if (!files) return;
+    if (!files || !pb.authStore.model) return;
     setUploading(true);
-    for (const file of Array.from(files)) {
-      // Demo: skip actual embedding
-      await new Promise((r) => setTimeout(r, 600));
-      const newDoc: Doc = {
-        id: 'd' + Date.now() + Math.random(),
-        title: file.name.replace(/\.[^.]+$/, ''),
-        source: file.name,
-        chunkCount: Math.floor(Math.random() * 40) + 10,
-        active: true,
-        created: new Date().toISOString().split('T')[0],
-        filename: file.name,
-      };
-      setDocs((d) => [newDoc, ...d]);
-      toast.success(`${file.name} embedding yapıldı (${newDoc.chunkCount} parça)`);
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('title', file.name.replace(/\.[^.]+$/, ''));
+        fd.append('source', file.name);
+        fd.append('active', 'true');
+        fd.append('chunk_count', '0');
+        fd.append('file', file);
+        fd.append('uploaded_by', (pb.authStore.model as { id: string }).id);
+
+        const created = await pb.collection('bot_documents').create<Doc>(fd);
+        setDocs((d) => [
+          { ...created, filename: created.file ? created.file.split('/').pop() || created.file : file.name },
+          ...d,
+        ]);
+        toast.success(`${file.name} yüklendi (embedding RAG pipeline'ında işlenecek)`);
+      }
+    } catch (e) {
+      toast.error('Yükleme hatası: ' + (e as Error).message);
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = '';
     }
-    setUploading(false);
   };
 
-  const removeDoc = (id: string) => {
+  const removeDoc = async (id: string) => {
     if (!confirm('Bu dokümanı silmek istediğinize emin misiniz?')) return;
-    setDocs((d) => d.filter((x) => x.id !== id));
+    try {
+      await pb.collection('bot_documents').delete(id);
+      setDocs((d) => d.filter((x) => x.id !== id));
+      toast.success('Doküman silindi');
+    } catch (e) {
+      toast.error('Silme hatası: ' + (e as Error).message);
+    }
   };
 
-  const toggleDoc = (id: string) => {
-    setDocs((d) => d.map((x) => (x.id === id ? { ...x, active: !x.active } : x)));
+  const toggleDoc = async (id: string, current: boolean) => {
+    try {
+      await pb.collection('bot_documents').update(id, { active: !current });
+      setDocs((d) => d.map((x) => (x.id === id ? { ...x, active: !current } : x)));
+    } catch (e) {
+      toast.error('Güncelleme hatası: ' + (e as Error).message);
+    }
   };
 
-  const saveSettings = () => {
-    toast.success('Bot ayarları kaydedildi');
+  const saveSettings = async () => {
+    if (!settingsId) return;
+    setSavingSettings(true);
+    try {
+      await pb.collection('bot_settings').update<BotSettings>(settingsId, {
+        system_prompt: systemPrompt,
+        welcome_message: welcome,
+        model: model || modelName,
+        enabled,
+        temperature: 0.7,
+        rag_top_k: 4,
+      } as never);
+      toast.success('Bot ayarları kaydedildi');
+    } catch (e) {
+      toast.error('Kayıt hatası: ' + (e as Error).message);
+    } finally {
+      setSavingSettings(false);
+    }
   };
 
   const testBot = async () => {
@@ -101,8 +188,8 @@ export default function AdminBot() {
     setTesting(true);
     try {
       const genai = new GoogleGenerativeAI(apiKey);
-      const model = genai.getGenerativeModel({ model: modelName, systemInstruction: systemPrompt });
-      const result = await model.generateContent(testMsg);
+      const m = genai.getGenerativeModel({ model: model || modelName, systemInstruction: systemPrompt });
+      const result = await m.generateContent(testMsg);
       setTestResult(result.response.text());
     } catch (err) {
       setTestResult('Hata: ' + (err as Error).message);
@@ -110,6 +197,14 @@ export default function AdminBot() {
       setTesting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center text-muted-foreground">
+        <Loader2 className="h-6 w-6 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 lg:p-8">
@@ -122,7 +217,8 @@ export default function AdminBot() {
           <Badge variant={apiKey ? 'default' : 'destructive'}>
             {apiKey ? 'API Key OK' : 'API Key Eksik'}
           </Badge>
-          <Badge variant="glass">Model: {modelName}</Badge>
+          <Badge variant="glass">Model: {model || modelName}</Badge>
+          <Badge variant={enabled ? 'default' : 'secondary'}>{enabled ? 'Aktif' : 'Pasif'}</Badge>
         </div>
       </div>
 
@@ -132,10 +228,26 @@ export default function AdminBot() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-gold-300" /> System Prompt</CardTitle>
-                <Button variant="gold" size="sm" onClick={saveSettings}><Save className="h-3.5 w-3.5" /> Kaydet</Button>
+                <Button variant="gold" size="sm" onClick={saveSettings} disabled={savingSettings || !settingsId}>
+                  {savingSettings ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  Kaydet
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="flex items-center gap-2 text-sm">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={enabled}
+                    onChange={(e) => setEnabled(e.target.checked)}
+                    className="h-4 w-4 rounded border-white/20 bg-white/5"
+                  />
+                  Bot aktif
+                </label>
+                <span className="ml-4 text-xs text-muted-foreground">Model:</span>
+                <Input value={model} onChange={(e) => setModel(e.target.value)} className="h-8 max-w-[200px] font-mono text-xs" />
+              </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium">Hoşgeldin Mesajı</label>
                 <Textarea rows={3} value={welcome} onChange={(e) => setWelcome(e.target.value)} />
@@ -182,12 +294,13 @@ export default function AdminBot() {
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold">{d.title}</div>
                       <div className="text-xs text-muted-foreground">
-                        {d.source} · {d.chunkCount} parça · {d.created}
+                        {d.source} · {d.chunk_count} parça · {d.created?.split('T')[0] || d.created}
                       </div>
                     </div>
                     <button
-                      onClick={() => toggleDoc(d.id)}
+                      onClick={() => toggleDoc(d.id, d.active)}
                       className={`relative h-5 w-9 rounded-full transition-colors ${d.active ? 'bg-accent' : 'bg-white/[0.1]'}`}
+                      title={d.active ? 'Pasif yap' : 'Aktif yap'}
                     >
                       <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white transition-transform ${d.active ? 'translate-x-4' : 'translate-x-0.5'}`} />
                     </button>
