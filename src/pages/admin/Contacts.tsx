@@ -15,6 +15,7 @@ import { CHANNELS, CONTACT_STATUSES, type Contact, type ContactStatus, type Chan
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { toast } from 'sonner';
 
 const DEMO: Contact[] = [
   { id: 'c1', name: 'Ahmet Yılmaz', phone: '0532 111 22 33', email: 'ahmet@mail.com', type: 'buyer', status: 'new', source: 'whatsapp', tags: ['sıcak'], notes: 'Temelli OSB yakını bakıyor', budget_min: 1500000, budget_max: 3000000, created: '2024-12-15T10:00:00Z', updated: '2024-12-15T10:00:00Z' },
@@ -137,7 +138,8 @@ function KanbanColumn({ status, contacts, view }: { status: typeof CONTACT_STATU
 }
 
 export default function AdminContacts() {
-  const [contacts, setContacts] = useState<Contact[]>(DEMO);
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'kanban' | 'list'>('kanban');
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState<'all' | 'buyer' | 'seller'>('all');
@@ -150,8 +152,12 @@ export default function AdminContacts() {
     (async () => {
       try {
         const items = await pb.collection('contacts').getFullList<Contact>({ sort: '-updated' });
-        if (items.length) setContacts(items);
-      } catch { /* demo */ }
+        setContacts(items);
+      } catch (e) {
+        toast.error('Kişiler yüklenemedi: ' + (e as Error).message);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, []);
 

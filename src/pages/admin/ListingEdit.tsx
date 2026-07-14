@@ -8,20 +8,6 @@ import { Input, Textarea, Select } from '@/components/ui/Form';
 import { pb } from '@/lib/pb';
 import { REGIONS } from '@/lib/constants';
 
-const DEMO: Record<string, any> = {
-  '1': {
-    title: 'Temelli Merkez · 1.250 m² İmarlı Konut Arsası',
-    slug: 'temelli-merkez-1250',
-    description: 'Temelli merkezde, gelişen konut bölgesinde yer alan 1.250 m² imarlı konut arsası.',
-    price: 2400000, currency: 'TRY', area_m2: 1250,
-    imar_status: 'Konut (E:0.30, Hmax: 2 Kat)',
-    tapu_status: 'Tapu Hazır · İpotek Yok',
-    region: 'temelli', city: 'Ankara',
-    neighborhood: 'Temelli Merkez', lat: 39.5633, lng: 32.3847,
-    status: 'available', published: true, featured: true,
-  },
-};
-
 export default function AdminListingEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -42,8 +28,9 @@ export default function AdminListingEdit() {
       try {
         const rec = await pb.collection('listings').getOne(id);
         setForm(rec);
-      } catch {
-        setForm({ ...DEMO[id] || form, ...form });
+      } catch (e) {
+        toast.error('İlan yüklenemedi: ' + (e as Error).message);
+        navigate('/admin/arsalar');
       }
     })();
   }, [id]);

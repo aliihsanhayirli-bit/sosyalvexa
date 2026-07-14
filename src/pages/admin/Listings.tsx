@@ -10,14 +10,7 @@ import { pb } from '@/lib/pb';
 import { formatPrice, formatArea } from '@/lib/utils';
 import type { Listing } from '@/types';
 import { REGIONS } from '@/lib/constants';
-
-const DEMO: Listing[] = [
-  { id: '1', slug: 'temelli-merkez-1250', title: 'Temelli Merkez · 1.250 m² İmarlı', price: 2400000, currency: 'TRY', area_m2: 1250, imar_status: 'Konut', tapu_status: 'Hazır', region: 'temelli', city: 'Ankara', lat: 39.56, lng: 32.38, photos: [], features: {}, status: 'available', published: true, created: '2024-12-01', updated: '2024-12-15' },
-  { id: '2', slug: 'polatli-yolu-980', title: 'Polatlı Yolu · 980 m²', price: 1850000, currency: 'TRY', area_m2: 980, imar_status: 'Konut', tapu_status: 'Hazır', region: 'polatli', city: 'Ankara', lat: 39.58, lng: 32.14, photos: [], features: {}, status: 'available', published: true, created: '2024-12-05', updated: '2024-12-10' },
-  { id: '3', slug: 'sincan-osb-1640', title: 'Sincan OSB Yanı · 1.640 m²', price: 3100000, currency: 'TRY', area_m2: 1640, imar_status: 'Sanayi', tapu_status: 'Hazır', region: 'cankaya', city: 'Ankara', lat: 39.97, lng: 32.58, photos: [], features: {}, status: 'reserved', published: true, created: '2024-11-20', updated: '2024-12-12' },
-  { id: '4', slug: 'haymana-720', title: 'Haymana · 720 m² Sıfır', price: 1450000, currency: 'TRY', area_m2: 720, imar_status: 'Tarla', tapu_status: 'Hazır', region: 'haymana', city: 'Ankara', lat: 39.43, lng: 32.49, photos: [], features: {}, status: 'available', published: true, created: '2024-12-08', updated: '2024-12-14' },
-  { id: '5', slug: 'temelli-yatirim-2200', title: 'Temelli OSB · 2.200 m² Yatırım', price: 4200000, currency: 'TRY', area_m2: 2200, imar_status: 'Sanayi', tapu_status: 'Hazır', region: 'temelli', city: 'Ankara', lat: 39.55, lng: 32.36, photos: [], features: {}, status: 'available', published: false, created: '2024-12-10', updated: '2024-12-15' },
-];
+import { toast } from 'sonner';
 
 const STATUS_BADGE: Record<string, { label: string; variant: 'default' | 'gold' | 'secondary' | 'destructive' }> = {
   available: { label: 'Mevcut', variant: 'default' },
@@ -26,18 +19,21 @@ const STATUS_BADGE: Record<string, { label: string; variant: 'default' | 'gold' 
 };
 
 export default function AdminListings() {
-  const [listings, setListings] = useState<Listing[]>(DEMO);
+  const [listings, setListings] = useState<Listing[]>([]);
   const [search, setSearch] = useState('');
   const [region, setRegion] = useState('all');
   const [status, setStatus] = useState('all');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
       try {
         const items = await pb.collection('listings').getFullList<Listing>({ sort: '-created' });
-        if (items.length) setListings(items);
-      } catch {
-        /* demo data */
+        setListings(items);
+      } catch (e) {
+        toast.error('İlanlar yüklenemedi: ' + (e as Error).message);
+      } finally {
+        setLoading(false);
       }
     })();
   }, []);
@@ -53,8 +49,11 @@ export default function AdminListings() {
     if (!confirm('Bu arsayı silmek istediğinize emin misiniz?')) return;
     try {
       await pb.collection('listings').delete(id);
-    } catch {}
-    setListings((arr) => arr.filter((l) => l.id !== id));
+      setListings((arr) => arr.filter((l) => l.id !== id));
+      toast.success('Arsa silindi');
+    } catch (e) {
+      toast.error('Silme hatası: ' + (e as Error).message);
+    }
   };
 
   return (
