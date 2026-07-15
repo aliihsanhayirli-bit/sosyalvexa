@@ -4,7 +4,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const PB_URL = process.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
-const EMBED_MODEL = 'text-embedding-004';
+const EMBED_MODEL = 'gemini-embedding-001';
 const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
 const RAG_TOP_K = 4;

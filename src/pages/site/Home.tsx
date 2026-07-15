@@ -11,7 +11,6 @@ const FEATURED = [
   { id: 1, title: 'Temelli Merkez · 1.250 m² İmarlı Arsa', price: 2400000, area: 1250, region: 'Temelli', tag: 'Yeni' },
   { id: 2, title: 'Polatlı Yolu Üzeri · Konut İmarlı', price: 1850000, area: 980, region: 'Polatlı', tag: 'Fırsat' },
   { id: 3, title: 'Sincan Sanayi Yanı · 1.640 m² Yatırımlık', price: 3100000, area: 1640, region: 'Sincan', tag: 'Popüler' },
-  { id: 4, title: 'Haymana Köy Cephesi · 720 m² Sıfır Arsa', price: 1450000, area: 720, region: 'Haymana', tag: 'Yeni' },
 ];
 
 const WHY = [

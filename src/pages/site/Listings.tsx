@@ -18,9 +18,7 @@ const DEMO: DemoListing[] = [
   { id: '1', slug: 'temelli-merkez-1250', title: 'Temelli Merkez · 1.250 m² İmarlı Konut Arsası', price: 2400000, area: 1250, region: 'temelli', imar: 'Konut (E:0.30)', tag: 'Yeni', tapu: 'Hazır' },
   { id: '2', slug: 'polatli-yolu-980', title: 'Polatlı Yolu Üzeri · 980 m²', price: 1850000, area: 980, region: 'polatli', imar: 'Konut (E:0.20)', tag: 'Fırsat', tapu: 'Hazır' },
   { id: '3', slug: 'sincan-sanayi-1640', title: 'Sincan Sanayi Yanı · 1.640 m² Yatırımlık', price: 3100000, area: 1640, region: 'cankaya', imar: 'Ticari (E:0.50)', tag: 'Popüler', tapu: 'Hazır' },
-  { id: '4', slug: 'haymana-koy-720', title: 'Haymana Köy Cephesi · 720 m² Sıfır Arsa', price: 1450000, area: 720, region: 'haymana', imar: 'Tarla', tapu: 'Hazır' },
   { id: '5', slug: 'temelli-yatirim-2200', title: 'Temelli OSB Yakını · 2.200 m² Yatırım Arsası', price: 4200000, area: 2200, region: 'temelli', imar: 'Sanayi (E:0.60)', tag: 'Yatırım', tapu: 'Hazır' },
-  { id: '6', slug: 'bala-merkez-1100', title: 'Bala Merkez · 1.100 m² Konut Arsası', price: 1750000, area: 1100, region: 'bala', imar: 'Konut (E:0.25)', tapu: 'Hazır' },
   { id: '7', slug: 'etimesgut-550', title: 'Etimesgut Sınırı · 550 m² Hobi Bahçesi', price: 950000, area: 550, region: 'etimesgut', imar: 'Hobi Bahçesi', tag: 'Yeni', tapu: 'Hazır' },
   { id: '8', slug: 'temelli-osb-3000', title: 'Temelli OSB Karşısı · 3.000 m² Sanayi', price: 6800000, area: 3000, region: 'temelli', imar: 'Sanayi (E:0.70)', tag: 'Stratejik', tapu: 'Hazır' },
 ];

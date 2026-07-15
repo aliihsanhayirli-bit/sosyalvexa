@@ -21,22 +21,6 @@ const REGION_DETAILS: Record<string, { description: string; stats: { value: stri
       { value: '24', label: 'aktif portföy' },
     ],
   },
-  haymana: {
-    description: 'Termal turizm ve doğa yatırımlarıyla öne çıkan bölge. Sıfır arsalar uygun fiyatlarla yatırımcı bekliyor.',
-    stats: [
-      { value: '₺1.2M', label: 'ortalama fiyat' },
-      { value: '%18', label: 'değer artışı' },
-      { value: '18', label: 'aktif portföy' },
-    ],
-  },
-  bala: {
-    description: 'Doğayla iç içe, butik yatırım ve hobi bahçesi için ideal. Hızlı tapu devri ve düşük tapu masrafı.',
-    stats: [
-      { value: '₺1.5M', label: 'ortalama fiyat' },
-      { value: '%15', label: 'değer artışı' },
-      { value: '12', label: 'aktif portföy' },
-    ],
-  },
   cankaya: {
     description: 'Başkentin en merkezi lokasyonlarından. Ticari ve konut imarlı arsalar prim değer taşıyor.',
     stats: [
@@ -62,7 +46,7 @@ export default function Regions() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
           <Badge variant="gold" className="mb-4">Bölgeler</Badge>
           <h1 className="font-display text-5xl font-medium leading-[1.1] tracking-tight sm:text-6xl text-balance">
-            Uzmanı olduğumuz <span className="gold-text italic">6 bölge</span>
+            Uzmanı olduğumuz <span className="gold-text italic">4 bölge</span>
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-foreground/70">
             Her bölgenin imar durumunu, fiyat trendlerini ve yatırım potansiyelini biliyoruz. Doğru bölgede doğru yatırım için bölge raporlarımızdan faydalanın.

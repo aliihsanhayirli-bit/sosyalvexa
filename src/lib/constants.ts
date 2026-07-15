@@ -36,8 +36,6 @@ export interface Region {
 export const REGIONS: Region[] = [
   { slug: 'temelli', name: 'Temelli', district: 'Sincan', highlight: true },
   { slug: 'polatli', name: 'Polatlı', district: 'Polatlı' },
-  { slug: 'haymana', name: 'Haymana', district: 'Haymana' },
-  { slug: 'bala', name: 'Bala', district: 'Bala' },
   { slug: 'cankaya', name: 'Çankaya', district: 'Çankaya' },
   { slug: 'etimesgut', name: 'Etimesgut', district: 'Etimesgut' },
 ];

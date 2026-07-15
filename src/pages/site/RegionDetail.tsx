@@ -30,16 +30,6 @@ const REGION_DETAILS: Record<string, { description: string; stats: { value: stri
     ],
     highlights: ['TCDD YHT durağına yakın', 'Verimli tarım arazisi', 'Konut imarlı parseller', 'Hızlı tapu devri'],
   },
-  haymana: {
-    description: 'Termal turizm ve doğa yatırımlarıyla öne çıkan bölge. Sıfır arsalar uygun fiyatlarla yatırımcı bekliyor.',
-    stats: [{ value: '₺1.2M', label: 'ortalama fiyat' }, { value: '%18', label: 'değer artışı' }, { value: '18', label: 'aktif portföy' }],
-    highlights: ['Termal turizm bölgesi', 'Doğa yatırımları', 'Sıfır arsa', 'Uygun giriş fiyatı'],
-  },
-  bala: {
-    description: 'Doğayla iç içe, butik yatırım ve hobi bahçesi için ideal. Hızlı tapu devri ve düşük tapu masrafı.',
-    stats: [{ value: '₺1.5M', label: 'ortalama fiyat' }, { value: '%15', label: 'değer artışı' }, { value: '12', label: 'aktif portföy' }],
-    highlights: ['Hobi bahçesi uygun', 'Hızlı tapu', 'Doğa içi lokasyon', 'Düşük masraf'],
-  },
   cankaya: {
     description: 'Başkentin en merkezi lokasyonlarından. Ticari ve konut imarlı arsalar prim değer taşıyor.',
     stats: [{ value: '₺4.2M', label: 'ortalama fiyat' }, { value: '%28', label: 'değer artışı' }, { value: '15', label: 'aktif portföy' }],

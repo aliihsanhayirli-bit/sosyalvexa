@@ -169,8 +169,8 @@ export default function AdminDashboard() {
                 { name: 'Ahmet Yılmaz', type: 'buyer', region: 'Temelli', channel: 'whatsapp', status: 'new' },
                 { name: 'Fatma Demir', type: 'seller', region: 'Polatlı', channel: 'web', status: 'qualified' },
                 { name: 'Mehmet Kaya', type: 'buyer', region: 'Sincan', channel: 'instagram', status: 'contacted' },
-                { name: 'Ayşe Şahin', type: 'invest', region: 'Haymana', channel: 'facebook', status: 'visit_scheduled' },
-                { name: 'Ali Çelik', type: 'seller', region: 'Bala', channel: 'whatsapp', status: 'new' },
+                { name: 'Ayşe Şahin', type: 'invest', region: 'Çankaya', channel: 'facebook', status: 'visit_scheduled' },
+                { name: 'Ali Çelik', type: 'seller', region: 'Etimesgut', channel: 'whatsapp', status: 'new' },
               ].map((c, i) => {
                 const ch = CHANNELS.find((x) => x.id === c.channel);
                 const st = CONTACT_STATUSES.find((x) => x.id === c.status);
