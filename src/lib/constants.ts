@@ -1,17 +1,18 @@
 export const COMPANY = {
-  name: 'YCA TİCARİ YATIRIM DANIŞMANLIK LTD. ŞTİ.',
-  brand: 'YCA Yatırım',
-  tagline: 'Temelli\'nin Premium Arsa Uzmanı',
+  name: 'GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ.',
+  brand: 'GYD Grup',
+  tagline: 'Emlak Yatırımında Doğru Adres',
   description:
-    'Ankara Temelli ve çevresinde arsa almak, satmak ve yatırım yapmak isteyenler için profesyonel danışmanlık. Güven, şeffaflık ve 15+ yıllık tecrübe.',
-  phone: '0545 655 10 70',
-  phoneRaw: '905456551070',
-  email: 'info@ycayatirim.com.tr',
-  address: 'Temelli Mahallesi, Ankara',
-  whatsapp: 'https://wa.me/905456551070',
+    'Ankara genelinde imarlı arsa almak, satmak ve yatırım yapmak isteyenler için profesyonel danışmanlık. Güven, şeffaflık ve uzun yıllara dayanan tecrübe.',
+  phone: '0532 489 25 67',
+  phoneRaw: '905324892567',
+  email: 'info@gydgrup.com.tr',
+  address: 'Ankara',
+  whatsapp: 'https://wa.me/905324892567',
   social: {
-    facebook: 'https://facebook.com/',
-    instagram: 'https://instagram.com/',
+    instagram: 'https://www.instagram.com/gydgrup/',
+    facebook: 'https://www.facebook.com/gydgrupankara/',
+    youtube: 'https://www.youtube.com/@GydGrupGayrimenkul',
   },
   hours: 'Pazartesi - Cumartesi · 09:00 - 19:00',
   foundedYear: 2010,
@@ -34,10 +35,15 @@ export interface Region {
 }
 
 export const REGIONS: Region[] = [
-  { slug: 'temelli', name: 'Temelli', district: 'Sincan', highlight: true },
-  { slug: 'polatli', name: 'Polatlı', district: 'Polatlı' },
   { slug: 'cankaya', name: 'Çankaya', district: 'Çankaya' },
   { slug: 'etimesgut', name: 'Etimesgut', district: 'Etimesgut' },
+  { slug: 'mamak', name: 'Mamak', district: 'Mamak' },
+  { slug: 'altindag', name: 'Altındağ', district: 'Altındağ' },
+  { slug: 'yenimahalle', name: 'Yenimahalle', district: 'Yenimahalle' },
+  { slug: 'kecioren', name: 'Keçiören', district: 'Keçiören' },
+  { slug: 'sincan', name: 'Sincan', district: 'Sincan' },
+  { slug: 'pursaklar', name: 'Pursaklar', district: 'Pursaklar' },
+  { slug: 'polatli', name: 'Polatlı', district: 'Polatlı' },
 ];
 
 export interface Service {

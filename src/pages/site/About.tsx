@@ -11,17 +11,17 @@ const VALUES = [
 ];
 
 const TIMELINE = [
-  { year: '2010', title: 'Kuruluş', desc: 'YCA, Temelli merkezde küçük bir ofisle arsa alım-satım danışmanlığına başladı.' },
-  { year: '2014', title: 'Büyüme', desc: 'Portföy 250 arsayı aştı, Polatlı ve Sincan bölgelerine genişledi.' },
+  { year: '2010', title: 'Kuruluş', desc: 'GYD Grup, Ankara merkezde küçük bir ofisle gayrimenkul proje ve danışmanlık hizmetlerine başladı.' },
+  { year: '2014', title: 'Büyüme', desc: 'Portföy 250 arsayı aştı, Ankara\'nın farklı bölgelerine genişledi.' },
   { year: '2018', title: 'Hukuki Süreç', desc: 'Kendi hukuk danışmanlığı birimini kurarak uçtan uca hizmet vermeye başladı.' },
   { year: '2021', title: 'Yatırım Danışmanlığı', desc: 'Bireysel yatırımcılar için portföy yönetimi ve değer artışı stratejileri.' },
   { year: '2024', title: 'Dijital Dönüşüm', desc: 'Online portföy, canlı danışmanlık ve yapay zekâ destekli hizmetler.' },
 ];
 
 const TEAM = [
-  { name: 'Yusuf Çağrı Aksoy', role: 'Kurucu & Genel Müdür', bio: '15+ yıl arsa ve yatırım danışmanlığı.' },
+  { name: 'Ali İhsan Hayırlı', role: 'Kurucu & Genel Müdür', bio: 'Emlak sektöründe uzun yıllara dayanan tecrübe; Ankara imarlı arsa yatırımı ve proje danışmanlığı.' },
   { name: 'Selin Kaya', role: 'Hukuk Direktörü', bio: 'Tapu ve imar hukuku uzmanı.' },
-  { name: 'Murat Demir', role: 'Yatırım Danışmanı', bio: 'Temelli bölgesi saha uzmanı.' },
+  { name: 'Murat Demir', role: 'Yatırım Danışmanı', bio: 'Ankara geneli saha uzmanı.' },
 ];
 
 export default function About() {
@@ -31,10 +31,10 @@ export default function About() {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl">
           <Badge variant="gold" className="mb-4">Hakkımızda</Badge>
           <h1 className="font-display text-5xl font-medium leading-[1.1] tracking-tight sm:text-6xl text-balance">
-            Temelli'nin <span className="gold-text italic">güvenilir</span> arsa markası
+            Ankara'nın <span className="gold-text italic">güvenilir</span> imarlı arsa markası
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-foreground/70">
-            {COMPANY.name} olarak, 2010 yılından bu yana Ankara Temelli ve çevresinde arsa alım-satımı, yatırım danışmanlığı ve hukuki süreç yönetimi alanlarında hizmet veriyoruz. Amacımız sadece arsa bulmak değil; müşterilerimizin hayatlarına değer katacak doğru yatırımları birlikte keşfetmek.
+            {COMPANY.name} olarak, 2010 yılından bu yana Ankara genelinde <strong>imarlı arsa</strong> alım-satımı, yatırım danışmanlığı ve hukuki süreç yönetimi alanlarında hizmet veriyoruz. Amacımız sadece arsa bulmak değil; müşterilerimizin hayatlarına değer katacak doğru yatırımları birlikte keşfetmek.
           </p>
         </motion.div>
       </section>

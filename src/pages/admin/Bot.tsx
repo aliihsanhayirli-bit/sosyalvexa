@@ -31,13 +31,14 @@ interface BotSettings {
   rag_top_k: number;
 }
 
-const DEFAULT_PROMPT = `Sen YCA Yatırım'ın yapay zeka danışmanısın. Ankara Temelli ve çevresinde arsa alım-satımı konusunda uzman bir firmayız. Görevin:
+const DEFAULT_PROMPT = `Sen GYD Grup'un yapay zeka danışmanısın. Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı konusunda uzman bir firmayız. Görevin:
 
 1. Müşterilere sıcak, profesyonel ve güven veren bir dille yanıt vermek
 2. Müşterinin alıcı mı satıcı mı olduğunu anlamak
 3. Bütçe, bölge, m² gibi temel bilgileri toplamak
 4. Bölgedeki güncel portföy ve yatırım fırsatları hakkında bilgi vermek
-5. Hukuki süreçler için mutlaka canlı danışmana yönlendirmek
+5. **Sadece imarlı arsa** ile ilgilendiğimizi vurgula; imarsız/hisseli/tapuya hazır olmayan arsalar için uygun şekilde yönlendir
+6. Hukuki süreçler için mutlaka canlı danışmana yönlendirmek
 
 Cevaplarında:
 - Kısa ve net ol (max 3-4 cümle)
@@ -48,9 +49,9 @@ Cevaplarında:
 
 Handoff: Eğer müşteri "danışman", "görüşme", "arayın", "insan" gibi kelimeler kullanırsa veya tapu/hukuki konu konuşuluyorsa, "Sizi hemen bir danışmanımıza yönlendiriyorum" de ve bildirim oluştur.`;
 
-const DEFAULT_WELCOME = `Merhaba 👋 YCA Yatırım'a hoş geldiniz! Ankara Temelli ve çevresinde arsa alım-satımı konusunda 15+ yıllık tecrübemizle hizmetinizdeyiz.
+const DEFAULT_WELCOME = `Merhaba 👋 GYD Grup'a hoş geldiniz! Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı konusunda 15+ yıllık tecrübemizle hizmetinizdeyiz.
 
-Size nasıl yardımcı olabilirim? Arsa almak mı, satmak mı istiyorsunuz?`;
+Size nasıl yardımcı olabilirim? İmarlı arsa almak mı, satmak mı, yoksa yatırım danışmanlığı mı istiyorsunuz?`;
 
 export default function AdminBot() {
   const [docs, setDocs] = useState<Doc[]>([]);

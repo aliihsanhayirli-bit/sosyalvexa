@@ -1,5 +1,5 @@
 {
-  "name": "yca-yatirim",
+  "name": "gyd-grup",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -12,7 +12,7 @@
     "build:check": "tsc -b --noEmit && vite build",
     "preview": "vite preview",
     "deploy:staging": "scripts/deploy-staging.sh",
-    "deploy:prod": "npm run build && rsync -a --delete dist/ /var/www/temelliarsa/dist/",
+    "deploy:prod": "npm run build && rsync -a --delete dist/ /var/www/gydgrup/dist/",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "typecheck:all": "tsc -b --noEmit"
   },

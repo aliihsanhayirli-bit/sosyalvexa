@@ -168,16 +168,16 @@ export default function Home() {
         </div>
       </section>
 
-      {/* NEDEN YCA */}
+      {/* NEDEN GYD */}
       <section className="container-wide py-32">
         <div className="grid items-center gap-16 lg:grid-cols-2">
           <motion.div {...fadeIn}>
-            <Badge variant="gold" className="mb-4">Neden YCA?</Badge>
+            <Badge variant="gold" className="mb-4">Neden GYD Grup?</Badge>
             <h2 className="font-display text-4xl font-medium leading-tight tracking-tight sm:text-5xl">
-              Ankara Temelli'de <span className="gold-text italic">güvenilir</span> adres
+              Ankara'da <span className="gold-text italic">güvenilir</span> imarlı arsa adresi
             </h2>
             <p className="mt-6 text-foreground/70 leading-relaxed">
-              YCA Yatırım, sadece bir arsa bulma platformu değil; her müşterisine özel yatırım stratejisi, hukuki güvence ve uzun vadeli değer artışı sunan bir danışmanlık şirketidir.
+              GYD Grup, sadece bir arsa bulma platformu değil; her müşterisine özel yatırım stratejisi, hukuki güvence ve uzun vadeli değer artışı sunan, <strong>imarlı arsa</strong> odaklı bir danışmanlık şirketidir.
             </p>
             <div className="mt-10 space-y-5">
               {WHY.map((w, i) => (

@@ -1,4 +1,4 @@
-// YCA Yatırım — Vite plugin: dev server'a API endpoint'leri ekler.
+// GYD Grup — Vite plugin: dev server'a API endpoint'leri ekler.
 // Prod'da bu endpoint'ler PocketBase Go hooks veya ayrı bir serverless function'a taşınır.
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -9,14 +9,15 @@ const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
 const RAG_TOP_K = 4;
 
-const SYSTEM_PROMPT = `Sen YCA Yatırım'ın yapay zeka danışmanısın. Ankara Temelli ve çevresinde arsa alım-satımı konusunda uzman bir firmayız.
+const SYSTEM_PROMPT = `Sen GYD Grup'un yapay zeka danışmanısın. Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı konusunda uzman bir firmayız.
 
 Görevin:
 1. Müşterilere sıcak, profesyonel ve güven veren bir dille yanıt vermek
 2. Müşterinin alıcı mı satıcı mı olduğunu anlamak
 3. Bütçe, bölge, m² gibi temel bilgileri toplamak
 4. Bölgedeki güncel portföy ve yatırım fırsatları hakkında bilgi vermek
-5. Hukuki süreçler için mutlaka canlı danışmana yönlendirmek
+5. **Sadece imarlı arsa** ile ilgilendiğimizi vurgula; imarsız/hisseli/tapuya hazır olmayan arsalar için uygun şekilde yönlendir
+6. Hukuki süreçler için mutlaka canlı danışmana yönlendirmek
 
 Cevaplarında:
 - Kısa ve net ol (max 3-4 cümle)
@@ -27,7 +28,7 @@ Cevaplarında:
 
 Handoff: Eğer müşteri "danışman", "görüşme", "arayın", "insan" gibi kelimeler kullanırsa veya tapu/hukuki konu konuşuluyorsa, "Sizi hemen bir danışmanımıza yönlendiriyorum" de ve bildirim oluştur.`;
 
-const WELCOME = `Merhaba 👋 YCA Yatırım'a hoş geldiniz! Ankara Temelli ve çevresinde arsa alım-satımı konusunda 15+ yıllık tecrübemizle hizmetinizdeyiz. Size nasıl yardımcı olabilirim? Arsa almak mı, satmak mı istiyorsunuz?`;
+const WELCOME = `Merhaba 👋 GYD Grup'a hoş geldiniz! Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı konusunda 15+ yıllık tecrübemizle hizmetinizdeyiz. Size nasıl yardımcı olabilirim? İmarlı arsa almak mı, satmak mı, yoksa yatırım danışmanlığı mı istiyorsunuz?`;
 
 const HANDOFF_KEYWORDS = ['danışman', 'danisman', 'insan', 'kişi', 'arayın', 'arayin', 'telefon', 'görüşme', 'gorisme', 'görüşelim', 'goruseylim'];
 
@@ -185,8 +186,8 @@ function registerMiddleware(server) {
             const demos = {
               buyer: `Merhaba! Arsa almak istemenize sevindim. Bütçeniz yaklaşık ne kadar, hangi bölgeyi düşünüyorsunuz? Size uygun seçenekleri hemen hazırlayalım.`,
               seller: `Arsanızı satmak için doğru adrestesiniz. Tapu ve imar bilgileriniz hazırsa, ücretsiz değerleme için sizi danışmanımıza yönlendirebilirim.`,
-              invest: `Temelli bölgesi son 3 yılda %35 değer kazandı. Yatırım hedefinize göre size özel bir portföy hazırlayabilirim — bütçeniz ne kadar?`,
-              handoff: `Tabii, sizi hemen bir danışmanımıza yönlendiriyorum. 0545 655 10 70 numaramızdan da arayabilirsiniz.`,
+              invest: `Ankara'da imarlı arsa son 3 yılda %35'e varan oranlarda değer kazandı. Yatırım hedefinize göre size özel bir portföy hazırlayabilirim — bütçeniz ne kadar?`,
+              handoff: `Tabii, sizi hemen bir danışmanımıza yönlendiriyorum. 0532 489 25 67 numaramızdan da arayabilirsiniz.`,
               general: `${WELCOME}`,
             };
             reply = demos[intent] || demos.general;
@@ -282,7 +283,7 @@ function registerMiddleware(server) {
           const token = req.url.match(/[?&]hub_verify_token=([^&]+)/)?.[1];
           const challenge = req.url.match(/[?&]hub_challenge=([^&]+)/)?.[1];
 
-          if (mode === 'subscribe' && token === (process.env.META_VERIFY_TOKEN || 'yca-verify-token')) {
+          if (mode === 'subscribe' && token === (process.env.META_VERIFY_TOKEN || 'gyd-verify-token')) {
             return res.end(challenge);
           }
           res.statusCode = 403;

@@ -4,35 +4,36 @@
 
 @layer base {
   :root {
-    /* Premium dark palette — YCA: lacivert + yeşil + altın aksent */
-    --background: 215 56% 7%;
+    /* GYD Grup — premium dark palette: lacivert + altın aksent */
+    --background: 220 45% 7%;
     --foreground: 40 25% 96%;
 
-    --card: 215 50% 9%;
+    --card: 220 40% 9%;
     --card-foreground: 40 25% 96%;
 
-    --popover: 215 56% 8%;
+    --popover: 220 45% 8%;
     --popover-foreground: 40 25% 96%;
 
-    /* YCA mavi — logodaki koyu lacivert */
-    --primary: 196 75% 18%;
+    /* GYD koyu lacivert — logodaki 'G' ve banner zemin */
+    --primary: 224 35% 18%;
     --primary-foreground: 40 25% 96%;
 
-    --secondary: 215 30% 14%;
+    --secondary: 220 25% 14%;
     --secondary-foreground: 40 25% 96%;
 
-    --muted: 215 30% 14%;
-    --muted-foreground: 215 12% 65%;
+    --muted: 220 25% 14%;
+    --muted-foreground: 220 12% 65%;
 
-    --accent: 165 75% 42%;
-    --accent-foreground: 215 56% 7%;
+    /* GYD altın aksent — logodaki kuleler ve banner başlık */
+    --accent: 43 80% 52%;
+    --accent-foreground: 220 45% 8%;
 
-    --destructive: 0 70% 50%;
+    --destructive: 0 72% 50%;
     --destructive-foreground: 40 25% 96%;
 
-    --border: 215 30% 18%;
-    --input: 215 30% 18%;
-    --ring: 165 75% 42%;
+    --border: 220 25% 18%;
+    --input: 220 25% 18%;
+    --ring: 43 80% 52%;
 
     --radius: 0.75rem;
   }
@@ -51,8 +52,8 @@
     @apply bg-background text-foreground font-sans;
     font-feature-settings: 'rlig' 1, 'calt' 1, 'ss01' 1;
     background-image:
-      radial-gradient(ellipse at top, hsl(196 60% 12% / 0.4), transparent 60%),
-      radial-gradient(ellipse at bottom right, hsl(165 50% 15% / 0.15), transparent 50%);
+      radial-gradient(ellipse at top, hsl(224 60% 12% / 0.4), transparent 60%),
+      radial-gradient(ellipse at bottom right, hsl(43 50% 15% / 0.12), transparent 50%);
     background-attachment: fixed;
   }
 
@@ -82,7 +83,7 @@
   }
 
   .gold-text {
-    background: linear-gradient(135deg, #E0C460 0%, #B8902A 50%, #E0C460 100%);
+    background: linear-gradient(135deg, #F0CB55 0%, #D4A82B 45%, #B8902A 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;

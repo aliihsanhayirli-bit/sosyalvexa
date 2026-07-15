@@ -16,7 +16,7 @@ interface Region {
   stats: { value: string; label: string }[];
 }
 
-const FALLBACK_DESCRIPTION = 'YCA Yatırım uzman ekibi tarafından takip edilen, portföyümüzde düzenli olarak arsa sunulan bölge. Detaylı bilgi için ofisimizle iletişime geçin.';
+const FALLBACK_DESCRIPTION = 'GYD Grup uzman ekibi tarafından takip edilen, portföyümüzde düzenli olarak imarlı arsa sunulan bölge. Detaylı bilgi için ofisimizle iletişime geçin.';
 const FALLBACK_STATS: { value: string; label: string }[] = [
   { value: '—', label: 'ortalama fiyat' },
   { value: '—', label: 'değer artışı' },

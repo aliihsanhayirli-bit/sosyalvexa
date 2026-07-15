@@ -43,9 +43,9 @@ export default function AdminLogin() {
         <div className="rounded-2xl border border-white/[0.08] bg-card/60 p-8 shadow-2xl shadow-black/40 backdrop-blur-2xl">
           <div className="mb-8 text-center">
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-accent/30 to-gold-500/30">
-              <img src="/logo.png" alt="YCA" className="h-12 w-12 rounded-full" />
+              <img src="/logo.png" alt="GYD Grup" className="h-12 w-12 rounded-full" />
             </div>
-            <h1 className="font-display text-3xl font-semibold">YCA Admin</h1>
+            <h1 className="font-display text-3xl font-semibold">GYD Admin</h1>
             <p className="mt-2 text-sm text-muted-foreground">Yönetim paneline giriş yapın</p>
           </div>
 
@@ -59,7 +59,7 @@ export default function AdminLogin() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@ycayatirim.com.tr"
+                  placeholder="admin@gydgrup.com.tr"
                   className="pl-10"
                 />
               </div>

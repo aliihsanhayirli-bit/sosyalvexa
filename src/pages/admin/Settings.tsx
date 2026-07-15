@@ -150,7 +150,7 @@ export default function AdminSettings() {
             </div>
             <div>
               <label className="mb-1.5 block text-sm font-medium">WhatsApp Numarası</label>
-              <Input value={form.whatsapp ?? ''} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} placeholder="905456551070" />
+              <Input value={form.whatsapp ?? ''} onChange={(e) => setForm((f) => ({ ...f, whatsapp: e.target.value }))} placeholder="905324892567" />
             </div>
           </CardContent>
         </Card>

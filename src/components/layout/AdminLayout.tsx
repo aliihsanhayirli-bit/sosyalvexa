@@ -46,9 +46,9 @@ export default function AdminLayout() {
     <div className="flex h-screen overflow-hidden bg-background">
       <aside className="hidden w-64 shrink-0 flex-col border-r border-white/[0.06] bg-card/40 backdrop-blur-xl lg:flex">
         <Link to="/" className="flex h-20 items-center gap-3 border-b border-white/[0.06] px-6">
-          <img src="/logo.png" alt="YCA" className="h-10 w-10 rounded-full ring-1 ring-white/10" />
+          <img src="/logo.png" alt="GYD Grup" className="h-10 w-10 rounded-full ring-1 ring-white/10" />
           <div>
-            <div className="font-display text-base font-semibold leading-none">YCA Admin</div>
+            <div className="font-display text-base font-semibold leading-none">GYD Admin</div>
             <div className="mt-1 text-[10px] uppercase tracking-wider text-muted-foreground">Yönetim Paneli</div>
           </div>
         </Link>
@@ -97,7 +97,7 @@ export default function AdminLayout() {
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-white/[0.06] bg-card/30 px-6 backdrop-blur-xl">
           <div className="flex items-center gap-2 lg:hidden">
             <Building2 className="h-5 w-5 text-accent" />
-            <span className="font-display font-semibold">YCA Admin</span>
+            <span className="font-display font-semibold">GYD Admin</span>
           </div>
           <div className="hidden lg:block">
             <div className="text-xs uppercase tracking-wider text-muted-foreground">Yönetim Paneli</div>

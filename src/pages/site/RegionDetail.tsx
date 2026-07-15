@@ -23,13 +23,13 @@ interface Region {
 }
 
 const FALLBACK: Pick<Region, 'description' | 'stats' | 'highlights'> = {
-  description: 'YCA Yatırım uzman ekibi tarafından takip edilen, portföyümüzde düzenli olarak arsa sunulan bölge. Detaylı bilgi için ofisimizle iletişime geçin.',
+  description: 'GYD Grup uzman ekibi tarafından takip edilen, portföyümüzde düzenli olarak imarlı arsa sunulan bölge. Detaylı bilgi için ofisimizle iletişime geçin.',
   stats: [
     { value: '₺—', label: 'ortalama fiyat' },
     { value: '—', label: 'değer artışı' },
     { value: '—', label: 'aktif portföy' },
   ],
-  highlights: ['YCA Yatırım uzman desteği', 'Hızlı tapu devri', 'Hukuki danışmanlık dahil'],
+  highlights: ['GYD Grup uzman desteği', 'Hızlı tapu devri', 'Hukuki danışmanlık dahil'],
 };
 
 export default function RegionDetail() {

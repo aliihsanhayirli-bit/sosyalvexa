@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// YCA Yatırım - Cross-platform development starter (Node.js ile)
+// GYD Grup - Cross-platform development starter (Node.js ile)
 
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -20,7 +20,7 @@ function start(name, cmd, args, cwd, color) {
 }
 
 console.log('\n\x1b[36m%s\x1b[0m', '━'.repeat(50));
-console.log('\x1b[36m  YCA Yatırım — Development\x1b[0m');
+console.log('\x1b[36m  GYD Grup — Development\x1b[0m');
 console.log('\x1b[36m━\x1b[0m'.repeat(25) + '\n');
 
 const pb = start('PocketBase', path.join(__dirname, 'backend', pocketbaseExe), ['serve'], path.join(__dirname, 'backend'));

@@ -63,7 +63,7 @@ export default function AdminDashboard() {
     <div className="p-6 lg:p-8">
       <div className="mb-8">
         <h1 className="font-display text-3xl font-semibold">Dashboard</h1>
-        <p className="mt-1 text-sm text-muted-foreground">YCA Yatırım · Genel performans özeti</p>
+        <p className="mt-1 text-sm text-muted-foreground">GYD Grup · Genel performans özeti</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

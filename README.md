@@ -1,6 +1,6 @@
-# YCA Yatırım — Premium 3D Web + CRM + Omnichannel Bot
+# GYD Grup — Premium 3D Web + CRM + Omnichannel Bot
 
-> Ankara Temelli bölgesinde arsa alım-satımı ve yatırım danışmanlığı yapan **YCA TİCARİ YATIRIM DANIŞMANLIK LTD. ŞTİ.** için geliştirilmiş, 3D lüks web sitesi, mini CRM ve çok kanallı (Web / WhatsApp / Messenger / Instagram) yapay zekâ destekli müşteri asistanı.
+> Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı yapan **GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ.** için geliştirilmiş, 3D lüks web sitesi, mini CRM ve çok kanallı (Web / WhatsApp / Messenger / Instagram) yapay zekâ destekli müşteri asistanı.
 
 ![Tech: Vite + React + Three.js + PocketBase + Gemini](https://img.shields.io/badge/stack-Vite%20%2B%20React%20%2B%20Three.js%20%2B%20PocketBase%20%2B%20Gemini-blue)
 
@@ -9,11 +9,11 @@
 ## ✨ Özellikler
 
 ### Müşteri Yüzü (`/`)
-- **3D Hero Sahnesi** — Temelli topografik haritası, parseller, otomatik kamera orbit, postprocessing (bloom + vignette), mobile fallback
-- **Anasayfa** — Öne çıkan arsalar, hizmetler, istatistikler, bölgeler, CTA
+- **3D Hero Sahnesi** — Ankara topografik haritası, parseller, otomatik kamera orbit, postprocessing (bloom + vignette), mobile fallback
+- **Anasayfa** — Öne çıkan imarlı arsalar, hizmetler, istatistikler, bölgeler, CTA
 - **Arsa Portföyü** — Grid/harita görünümü, filtre (bölge, fiyat, alan), sıralama
 - **Arsa Detay** — Galeri, harita, özellikler, iletişim CTA
-- **Bölgeler** — 6 bölge için SEO sayfaları (Temelli uzman)
+- **Bölgeler** — 9 bölge için SEO sayfaları (Ankara geneli)
 - **İletişim** — Form, telefon, WhatsApp, e-posta, harita
 - **Yüzen Chat Widget** — Gemini AI, RAG, alıcı/satıcı ayrımı, intent tespiti, danışmana devir
 
@@ -50,7 +50,7 @@ npm install
 
 # 2) İlk admin hesabını oluştur (sadece bir kez)
 cd backend
-./pocketbase.exe admin create admin@ycayatirim.com.tr "GüçlüŞifre!"
+./pocketbase.exe admin create admin@gydgrup.com.tr "GüçlüŞifre!"
 cd ..
 
 # 3) Hem PocketBase hem Vite'ı başlat
@@ -69,7 +69,7 @@ dev.bat
 | PocketBase Admin UI | http://localhost:8090/_/ |
 | PocketBase REST API | http://localhost:8090/api/ |
 
-**Admin paneline giriş:** `admin@ycayatirim.com.tr` / oluşturduğunuz şifre
+**Admin paneline giriş:** `admin@gydgrup.com.tr` / oluşturduğunuz şifre
 
 ---
 
@@ -85,7 +85,7 @@ cp .env.example .env
 VITE_POCKETBASE_URL=http://127.0.0.1:8090
 VITE_GEMINI_API_KEY=AIza...           # https://aistudio.google.com
 VITE_GEMINI_MODEL=gemini-1.5-flash
-VITE_WHATSAPP_NUMBER=905456551070
+VITE_WHATSAPP_NUMBER=905324892567
 VITE_SITE_URL=http://localhost:5173
 ```
 
@@ -96,7 +96,7 @@ VITE_SITE_URL=http://localhost:5173
 ## 📁 Proje Yapısı
 
 ```
-temelliarsa/
+gydgrup/
 ├── public/                 # Logo, statik dosyalar
 ├── src/
 │   ├── components/
@@ -177,4 +177,4 @@ temelliarsa/
 
 ## 📜 Lisans
 
-© 2024 YCA TİCARİ YATIRIM DANIŞMANLIK LTD. ŞTİ. Tüm hakları saklıdır.
+© 2024 GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ. Tüm hakları saklıdır.

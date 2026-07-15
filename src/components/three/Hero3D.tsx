@@ -296,7 +296,7 @@ export function Hero3D() {
           >
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-accent">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse-glow" />
-              Temelli · Ankara
+              Ankara · İmarlı Arsa
             </div>
 
             <h1 className="font-display text-5xl font-medium leading-[1.05] tracking-tight text-foreground sm:text-7xl">
@@ -305,7 +305,7 @@ export function Hero3D() {
             </h1>
 
             <p className="mt-6 max-w-lg text-base leading-relaxed text-foreground/70 sm:text-lg">
-              YCA Yatırım, Ankara Temelli ve çevresinde arsa alım-satımı, yatırım danışmanlığı ve hukuki süreç yönetiminde 15+ yıllık tecrübesiyle yanınızda.
+              GYD Grup, Ankara genelinde imarlı arsa alım-satımı, yatırım danışmanlığı ve hukuki süreç yönetiminde 15+ yıllık tecrübesiyle yanınızda.
             </p>
 
             <motion.div
