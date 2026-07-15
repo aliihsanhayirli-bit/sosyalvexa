@@ -153,10 +153,10 @@ export default function AdminContacts() {
       if (typeFilter !== 'all') filter.push(`type = "${typeFilter}"`);
       if (channelFilter !== 'all') filter.push(`source = "${channelFilter}"`);
 
-      const items = await pb.collection('contacts').getList<Contact>(1, KANBAN_LIMIT, {
-        sort: '-updated',
-        filter: filter.join(' && ') || undefined,
-      });
+      const listOpts: Record<string, unknown> = { sort: '-updated' };
+      const f = filter.join(' && ');
+      if (f) listOpts.filter = f;
+      const items = await pb.collection('contacts').getList<Contact>(1, KANBAN_LIMIT, listOpts);
       setContacts(items.items);
     } catch (e) {
       toast.error('Kişiler yüklenemedi: ' + (e as Error).message);

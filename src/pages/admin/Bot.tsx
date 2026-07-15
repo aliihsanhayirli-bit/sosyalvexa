@@ -145,8 +145,31 @@ export default function AdminBot() {
         toast.success(
           lower.endsWith('.pdf') || lower.endsWith('.docx')
             ? `${file.name} yüklendi (PDF/DOCX için metin çıkarma desteklenmiyor)`
-            : `${file.name} yüklendi, embedding işleniyor…`,
+            : `${file.name} yüklendi, RAG embed tetikleniyor…`,
         );
+
+        // RAG embed: server-side chunking + Gemini embedding.
+        // .txt/.md için anlamlı; PDF/DOCX için raw_text zaten placeholder metin
+        // olduğundan yine de çalışır ama yararlı değil.
+        if (created.raw_text) {
+          try {
+            const r = await fetch('/api/rag/embed', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ docId: created.id }),
+            });
+            const j = await r.json();
+            if (j.ok) {
+              toast.success(`${file.name}: ${j.chunkCount} parça embed edildi`);
+              // chunk_count'u local state'te güncelle
+              setDocs((d) => d.map((x) => (x.id === created.id ? { ...x, chunk_count: j.chunkCount } : x)));
+            } else {
+              toast.warning(`${file.name}: RAG embed başarısız — ${j.error}`);
+            }
+          } catch (e) {
+            toast.warning(`${file.name}: RAG embed hatası — ${(e as Error).message}`);
+          }
+        }
       }
     } catch (e) {
       toast.error('Yükleme hatası: ' + (e as Error).message);

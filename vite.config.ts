@@ -14,6 +14,15 @@ export default defineConfig({
   server: {
     port: 5173,
     host: true,
+    strictPort: false,
+    hmr: {
+      port: 5174,
+      host: 'localhost',
+    },
+  },
+  preview: {
+    port: 4173,
+    host: '0.0.0.0',
   },
   build: {
     target: 'es2020',

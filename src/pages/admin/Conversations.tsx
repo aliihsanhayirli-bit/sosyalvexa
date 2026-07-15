@@ -57,11 +57,13 @@ export default function AdminConversations() {
       }
       if (channel !== 'all') filter.push(`channel = "${channel}"`);
 
-      const list = await pb.collection('conversations').getList<ConvRecord>(1, 200, {
+      const listOpts: Record<string, unknown> = {
         sort: '-last_message_at',
         expand: 'contact',
-        filter: filter.join(' && ') || undefined,
-      });
+      };
+      const f = filter.join(' && ');
+      if (f) listOpts.filter = f;
+      const list = await pb.collection('conversations').getList<ConvRecord>(1, 200, listOpts);
 
       const q = search.trim().toLowerCase();
       const items = q
@@ -102,8 +104,9 @@ export default function AdminConversations() {
   useEffect(() => {
     if (active) {
       loadMessages(active);
-      // realtime
-      pb.collection('messages').unsubscribe('*');
+      // realtime — unsubscribe() (parametresiz) tüm listener'ları temizler,
+      // böylece sayfa her açılışta listener birikmesi olmaz.
+      pb.collection('messages').unsubscribe();
       pb.collection('messages').subscribe('*', (e) => {
         if (e.action === 'create' && e.record.conversation === active) {
           setMessages((m) => [...m, e.record as unknown as MsgRecord]);
@@ -111,7 +114,7 @@ export default function AdminConversations() {
       });
     }
     return () => {
-      pb.collection('messages').unsubscribe('*');
+      pb.collection('messages').unsubscribe();
     };
   }, [active]);
 
