@@ -124,12 +124,29 @@ export default function AdminBot() {
         fd.append('file', file);
         fd.append('uploaded_by', (pb.authStore.model as { id: string }).id);
 
+        // .txt ve .md için metni oku -> embed hook'u parçalayıp Gemini'ye göndersin
+        const lower = file.name.toLowerCase();
+        if (lower.endsWith('.txt') || lower.endsWith('.md')) {
+          try {
+            const text = await file.text();
+            fd.append('raw_text', text);
+          } catch (e) {
+            console.warn('raw_text okunamadı', e);
+          }
+        } else {
+          fd.append('raw_text', `PDF/DOCX desteği henüz yok. Lütfen .txt veya .md olarak yükleyin. Dosya: ${file.name}`);
+        }
+
         const created = await pb.collection('bot_documents').create<Doc>(fd);
         setDocs((d) => [
           { ...created, filename: created.file ? created.file.split('/').pop() || created.file : file.name },
           ...d,
         ]);
-        toast.success(`${file.name} yüklendi (embedding RAG pipeline'ında işlenecek)`);
+        toast.success(
+          lower.endsWith('.pdf') || lower.endsWith('.docx')
+            ? `${file.name} yüklendi (PDF/DOCX için metin çıkarma desteklenmiyor)`
+            : `${file.name} yüklendi, embedding işleniyor…`,
+        );
       }
     } catch (e) {
       toast.error('Yükleme hatası: ' + (e as Error).message);

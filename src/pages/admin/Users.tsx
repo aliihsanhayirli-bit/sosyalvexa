@@ -53,16 +53,21 @@ export default function AdminUsers() {
     }
     setSaving(true);
     try {
-      await pb.collection('users').create({
+      // PocketBase auth create'inde verified=true reddedilir; önce oluştur, sonra verify et
+      const created = await pb.collection('users').create({
         email: form.email.trim(),
         password: form.password,
         passwordConfirm: form.password,
         name: form.name.trim(),
         role: form.role,
-        verified: true,
         emailVisibility: true,
       } as never);
-      toast.success('Üye eklendi');
+      try {
+        await pb.collection('users').update(created.id, { verified: true } as never);
+      } catch {
+        // verified alanı güncellenemezse kullanıcı yine de giriş yapabilir, sadece doğrulanmamış olur
+      }
+      toast.success('Üye eklendi (giriş yapabilir)');
       setForm({ name: '', email: '', password: '', role: 'agent' });
       setShowInvite(false);
       load();

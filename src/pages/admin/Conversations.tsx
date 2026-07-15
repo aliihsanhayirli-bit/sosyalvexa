@@ -47,13 +47,29 @@ export default function AdminConversations() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const loadConvs = async () => {
+    setLoading(true);
     try {
-      const list = await pb.collection('conversations').getList<ConvRecord>(1, 100, {
+      const filter: string[] = [];
+      if (search.trim()) {
+        // Sunucu tarafında contact.name üzerinden filtreleme expand ile mümkün değil,
+        // bu yüzden tümünü çekip client'ta filtreliyoruz (PB filter syntax kısıtlı).
+        // Büyük data setlerinde contact expand + fullText search eklenmeli.
+      }
+      if (channel !== 'all') filter.push(`channel = "${channel}"`);
+
+      const list = await pb.collection('conversations').getList<ConvRecord>(1, 200, {
         sort: '-last_message_at',
         expand: 'contact',
+        filter: filter.join(' && ') || undefined,
       });
-      setConvs(list.items);
-      if (list.items.length > 0 && !active) setActive(list.items[0].id);
+
+      const q = search.trim().toLowerCase();
+      const items = q
+        ? list.items.filter((c) => (c.expand?.contact?.name || '').toLowerCase().includes(q))
+        : list.items;
+
+      setConvs(items);
+      if (items.length > 0 && !active) setActive(items[0].id);
     } catch (e) {
       toast.error('Konuşmalar yüklenemedi: ' + (e as Error).message);
     } finally {
@@ -76,7 +92,12 @@ export default function AdminConversations() {
 
   useEffect(() => {
     loadConvs();
-  }, []);
+  }, [channel]);
+
+  useEffect(() => {
+    const t = setTimeout(loadConvs, 300);
+    return () => clearTimeout(t);
+  }, [search]);
 
   useEffect(() => {
     if (active) {
@@ -94,12 +115,7 @@ export default function AdminConversations() {
     };
   }, [active]);
 
-  const filtered = convs.filter((c) => {
-    const name = c.expand?.contact?.name || '';
-    if (search && !name.toLowerCase().includes(search.toLowerCase())) return false;
-    if (channel !== 'all' && c.channel !== channel) return false;
-    return true;
-  });
+  const filtered = convs;
 
   const activeConv = convs.find((c) => c.id === active);
   const ch = activeConv ? CHANNELS.find((c) => c.id === activeConv.channel) : null;
