@@ -1,164 +1,228 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Stars, Float, Html, PerspectiveCamera } from '@react-three/drei';
+import { Stars, Html } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
 
-/**
- * Procedürel topografik yüzey: Temelli civarının bozkır/engebenli yapısını
- * noise tabanlı vertex displacement ile üretir. Gerçek DEM yerine bağımsız,
- * deterministik, estetik bir arazi.
- */
-function Terrain({ onHover }: { onHover: (i: number | null) => void }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+type BuildingSeed = {
+  id: number;
+  x: number;
+  z: number;
+  w: number;
+  d: number;
+  h: number;
+  premium: boolean;
+  label: string;
+  price: string;
+  area: string;
+};
 
-  const geometry = useMemo(() => {
-    const size = 24;
-    const segments = 180;
-    const geo = new THREE.PlaneGeometry(size, size, segments, segments);
-    geo.rotateX(-Math.PI / 2);
-
-    const pos = geo.attributes.position as THREE.BufferAttribute;
-    const colors: number[] = [];
-
-    // Multi-octave noise (FBM)
-    const noise2D = (x: number, y: number) => {
-      const s = Math.sin(x * 1.2 + Math.cos(y * 0.7)) * Math.cos(y * 1.4 - Math.sin(x * 0.9));
-      return (s + 1) / 2;
-    };
-
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      const z = pos.getZ(i);
-      const dist = Math.sqrt(x * x + z * z);
-
-      // Yükselti: merkezden uzaklaştıkça alçal, hafif tepecikler
-      let h = 0;
-      h += noise2D(x * 0.18, z * 0.18) * 1.4;
-      h += noise2D(x * 0.45, z * 0.45) * 0.5;
-      h += noise2D(x * 0.9, z * 0.9) * 0.18;
-      h -= Math.max(0, dist - 8) * 0.25; // uzak kenarlar alçal
-      h += Math.cos(x * 0.3) * Math.sin(z * 0.3) * 0.3;
-
-      pos.setY(i, h);
-
-      // Renk: yükseklik + konum gradient
-      const t = THREE.MathUtils.clamp((h + 0.6) / 2.2, 0, 1);
-      const base = new THREE.Color('#0c1f33');
-      const mid = new THREE.Color('#1e5a4a');
-      const top = new THREE.Color('#3a8a72');
-      const col = base.clone().lerp(mid, t).lerp(top, Math.pow(t, 3) * 0.8);
-      colors.push(col.r, col.g, col.b);
+const CITY = (() => {
+  const seeds: BuildingSeed[] = [];
+  const cols = 6;
+  const rows = 4;
+  const stepX = 2.2;
+  const stepZ = 2.2;
+  const labels = [
+    { label: 'Çankaya', price: '₺3.4M', area: '1.420 m²' },
+    { label: 'Etimesgut', price: '₺2.1M', area: '980 m²' },
+    { label: 'Mamak', price: '₺1.6M', area: '820 m²' },
+    { label: 'Yenimahalle', price: '₺2.8M', area: '1.180 m²' },
+    { label: 'Keçiören', price: '₺1.9M', area: '940 m²' },
+    { label: 'Sincan', price: '₺1.4M', area: '720 m²' },
+    { label: 'Altındağ', price: '₺2.3M', area: '1.050 m²' },
+    { label: 'Pursaklar', price: '₺1.7M', area: '860 m²' },
+  ];
+  let id = 0;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      if ((r === 1 && c === 2) || (r === 2 && c === 4)) continue;
+      const baseW = 0.8 + Math.sin(c * 1.3 + r * 0.7) * 0.3;
+      const baseD = 0.8 + Math.cos(c * 0.9 + r * 1.1) * 0.3;
+      const baseH = 1.2 + Math.abs(Math.sin(c * 0.6 + r * 1.7)) * 3.6;
+      const premium = (c + r) % 5 === 0 || (c * r) % 7 === 0;
+      const meta = labels[(c + r) % labels.length];
+      seeds.push({
+        id: id++,
+        x: (c - (cols - 1) / 2) * stepX + (Math.random() - 0.5) * 0.25,
+        z: (r - (rows - 1) / 2) * stepZ + (Math.random() - 0.5) * 0.25,
+        w: baseW,
+        d: baseD,
+        h: baseH,
+        premium,
+        label: meta.label,
+        price: meta.price,
+        area: meta.area,
+      });
     }
+  }
+  return seeds;
+})();
 
-    geo.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    geo.computeVertexNormals();
-    return geo;
-  }, []);
+const WINDOW_TEXTURE = (() => {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 256;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#08111f';
+  ctx.fillRect(0, 0, c.width, c.height);
+  const cols = 6;
+  const rows = 14;
+  const padX = 8;
+  const padY = 8;
+  const w = (c.width - padX * 2) / cols;
+  const h = (c.height - padY * 2) / rows;
+  for (let r = 0; r < rows; r++) {
+    for (let cc = 0; cc < cols; cc++) {
+      const lit = Math.random() < 0.55;
+      const warm = lit && Math.random() < 0.6;
+      const x = padX + cc * w + 2;
+      const y = padY + r * h + 2;
+      const ww = w - 4;
+      const hh = h - 4;
+      if (lit) {
+        ctx.fillStyle = warm ? '#F0CB55' : '#5fa9c9';
+      } else {
+        ctx.fillStyle = '#0a1628';
+      }
+      ctx.fillRect(x, y, ww, hh);
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+})();
+
+function Building({
+  x, z, w, d, h, premium, label, price, area, hovered, onHover,
+}: BuildingSeed & { hovered: boolean; onHover: (id: number | null) => void }) {
+  const ref = useRef<THREE.Group>(null);
+  const glowRef = useRef<THREE.Mesh>(null);
+  const targetY = premium ? h + 0.18 : h / 2;
+
+  useFrame((_, dt) => {
+    if (!ref.current) return;
+    const t = hovered ? 0.3 : 0;
+    ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, t, 4, dt);
+    const s = hovered ? 1.04 : 1;
+    ref.current.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
+    if (glowRef.current) {
+      const mat = glowRef.current.material as THREE.MeshBasicMaterial;
+      mat.opacity = THREE.MathUtils.damp(mat.opacity, hovered ? 0.9 : 0.0, 6, dt);
+    }
+  });
+
+  const repeats = useMemo(() => {
+    const u = Math.max(1, Math.round(w * 1.4));
+    const v = Math.max(1, Math.round(h * 0.8));
+    return { u, v };
+  }, [w, h]);
+
+  const sideTexture = useMemo(() => {
+    const t = WINDOW_TEXTURE.clone();
+    t.needsUpdate = true;
+    t.repeat.set(repeats.u, repeats.v);
+    return t;
+  }, [repeats.u, repeats.v]);
 
   return (
-    <mesh ref={meshRef} geometry={geometry} receiveShadow>
+    <group
+      ref={ref}
+      position={[x, 0, z]}
+      onPointerOver={(e) => { e.stopPropagation(); onHover(id); document.body.style.cursor = 'pointer'; }}
+      onPointerOut={() => { onHover(null); document.body.style.cursor = 'auto'; }}
+    >
+      <mesh castShadow receiveShadow position={[0, h / 2, 0]}>
+        <boxGeometry args={[w, h, d]} />
+        <meshStandardMaterial
+          map={sideTexture}
+          color={hovered ? '#1a2540' : '#0c1626'}
+          emissive={premium ? '#3a2a08' : '#0a1a2a'}
+          emissiveIntensity={premium ? 0.45 : 0.2}
+          metalness={0.55}
+          roughness={0.4}
+        />
+      </mesh>
+
+      {premium && (
+        <mesh ref={glowRef} position={[0, h + 0.05, 0]}>
+          <boxGeometry args={[w * 0.85, 0.08, d * 0.85]} />
+          <meshBasicMaterial color="#F0CB55" transparent opacity={0} />
+        </mesh>
+      )}
+
+      {hovered && (
+        <Html position={[0, h + 1.0, 0]} center distanceFactor={10} zIndexRange={[100, 0]}>
+          <div className="pointer-events-none rounded-lg border border-accent/40 bg-background/90 px-3 py-2 shadow-2xl shadow-accent/20 backdrop-blur-md">
+            <div className="text-[10px] uppercase tracking-wider text-accent">{label}</div>
+            <div className="mt-0.5 font-display text-lg font-semibold text-foreground">{price}</div>
+            <div className="text-[11px] text-muted-foreground">{area}</div>
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
+function GroundPlate() {
+  return (
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
+      <circleGeometry args={[14, 64]} />
       <meshStandardMaterial
-        vertexColors
+        color="#08111f"
+        emissive="#0a1628"
+        emissiveIntensity={0.3}
+        metalness={0.2}
         roughness={0.85}
-        metalness={0.05}
-        flatShading
       />
     </mesh>
   );
 }
 
-const PARCELS = [
-  { id: 0, position: [-3.2, 0, -1.2] as const, size: [2.2, 0.5, 1.6] as const, price: '₺2.4M', area: '1.250 m²' },
-  { id: 1, position: [2.8, 0, 0.6] as const, size: [1.8, 0.6, 1.4] as const, price: '₺1.9M', area: '980 m²' },
-  { id: 2, position: [0.5, 0, 2.8] as const, size: [2.6, 0.7, 1.8] as const, price: '₺3.1M', area: '1.640 m²' },
-  { id: 3, position: [-1.5, 0, 2.2] as const, size: [1.4, 0.4, 1.2] as const, price: '₺1.4M', area: '720 m²' },
-  { id: 4, position: [3.6, 0, -2.4] as const, size: [2.0, 0.55, 1.5] as const, price: '₺2.7M', area: '1.380 m²' },
-];
-
-function Parcel({
-  id, position, size, price, area, hovered, onHover,
-}: {
-  id: number; position: readonly [number, number, number]; size: readonly [number, number, number];
-  price: string; area: string; hovered: boolean; onHover: (i: number | null) => void;
-}) {
-  const ref = useRef<THREE.Mesh>(null);
-  const [h, setH] = useState(0);
+function GridLines() {
+  const ref = useRef<THREE.LineSegments>(null);
+  const geom = useMemo(() => {
+    const verts: number[] = [];
+    const step = 1.1;
+    const half = 7;
+    for (let i = -half; i <= half; i++) {
+      verts.push(i * step, 0, -half * step, i * step, 0, half * step);
+      verts.push(-half * step, 0, i * step, half * step, 0, i * step);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    return g;
+  }, []);
 
   useFrame((_, dt) => {
     if (!ref.current) return;
-    const target = hovered ? 0.45 : 0;
-    setH(THREE.MathUtils.damp(h, target, 4, dt));
-    ref.current.position.y = size[1] / 2 + h;
-    const s = hovered ? 1.04 : 1;
-    ref.current.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
+    const mat = ref.current.material as THREE.LineBasicMaterial;
+    mat.opacity = 0.18 + Math.sin(performance.now() * 0.0008) * 0.05;
   });
 
   return (
-    <group position={[position[0], 0, position[2]]}>
-      <mesh
-        ref={ref}
-        onPointerOver={(e) => { e.stopPropagation(); onHover(id); document.body.style.cursor = 'pointer'; }}
-        onPointerOut={() => { onHover(null); document.body.style.cursor = 'auto'; }}
-      >
-        <boxGeometry args={[size[0], size[1], size[2]]} />
-        <meshStandardMaterial
-          color={hovered ? '#00d4aa' : '#0e3a4a'}
-          emissive={hovered ? '#00d4aa' : '#0a2a3a'}
-          emissiveIntensity={hovered ? 0.7 : 0.3}
-          metalness={0.4}
-          roughness={0.35}
-          transparent
-          opacity={0.92}
-        />
-      </mesh>
-
-      {hovered && (
-        <Float speed={2} rotationIntensity={0.2} floatIntensity={0.4}>
-          <Html position={[0, size[1] + 1.2, 0]} center distanceFactor={10} zIndexRange={[100, 0]}>
-            <div className="pointer-events-none rounded-lg border border-accent/40 bg-background/90 px-3 py-2 shadow-2xl shadow-accent/20 backdrop-blur-md">
-              <div className="text-[10px] uppercase tracking-wider text-accent">Parsel #{id + 1}</div>
-              <div className="mt-0.5 font-display text-lg font-semibold text-foreground">{price}</div>
-              <div className="text-[11px] text-muted-foreground">{area}</div>
-            </div>
-          </Html>
-        </Float>
-      )}
-
-      {/* Çevre çizgisi */}
-      <lineSegments position={[0, 0.02, 0]}>
-        <edgesGeometry args={[new THREE.BoxGeometry(size[0] + 0.05, 0.02, size[2] + 0.05)]} />
-        <lineBasicMaterial color="#00d4aa" transparent opacity={hovered ? 0.9 : 0.5} />
-      </lineSegments>
-    </group>
+    <lineSegments ref={ref} geometry={geom} position={[0, 0.005, 0]}>
+      <lineBasicMaterial color="#D4A82B" transparent opacity={0.18} />
+    </lineSegments>
   );
 }
 
 function AutoCamera() {
   const { camera } = useThree();
-  const ref = useRef({ angle: 0.6, radius: 14, height: 6 });
-  const [userInteracting, setUserInteracting] = useState(false);
-  const lastChange = useRef(0);
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      if (Date.now() - lastChange.current > 2500) setUserInteracting(false);
-    }, 500);
-    return () => clearInterval(id);
-  }, []);
+  const ref = useRef({ angle: 0.4, radius: 13, height: 5.5 });
 
   useFrame((_, dt) => {
-    if (!userInteracting) {
-      ref.current.angle += dt * 0.05;
-    }
+    ref.current.angle += dt * 0.04;
     const { angle, radius, height } = ref.current;
     const targetX = Math.cos(angle) * radius;
     const targetZ = Math.sin(angle) * radius;
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 1.5, dt);
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 1.5, dt);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, height, 1.5, dt);
-    camera.lookAt(0, 0, 0);
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 1.2, dt);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 1.2, dt);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, height, 1.2, dt);
+    camera.lookAt(0, 1, 0);
   });
 
   return null;
@@ -167,23 +231,23 @@ function AutoCamera() {
 function GoldParticles() {
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
-    const arr = new Float32Array(180 * 3);
-    for (let i = 0; i < 180; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 30;
-      arr[i * 3 + 1] = Math.random() * 8 + 1;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 30;
+    const arr = new Float32Array(140 * 3);
+    for (let i = 0; i < 140; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 26;
+      arr[i * 3 + 1] = Math.random() * 9 + 1.5;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 26;
     }
     return arr;
   }, []);
 
   useFrame((_, dt) => {
     if (!ref.current) return;
-    ref.current.rotation.y += dt * 0.02;
+    ref.current.rotation.y += dt * 0.015;
     const pos = ref.current.geometry.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) {
       let y = pos.getY(i);
-      y += dt * 0.3;
-      if (y > 10) y = 1;
+      y += dt * 0.25;
+      if (y > 11) y = 1.5;
       pos.setY(i, y);
     }
     pos.needsUpdate = true;
@@ -192,9 +256,9 @@ function GoldParticles() {
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={180} array={positions} itemSize={3} args={[positions, 3]} />
+        <bufferAttribute attach="attributes-position" count={140} array={positions} itemSize={3} args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.06} color="#E0C460" transparent opacity={0.7} sizeAttenuation />
+      <pointsMaterial size={0.05} color="#F0CB55" transparent opacity={0.6} sizeAttenuation />
     </points>
   );
 }
@@ -217,7 +281,7 @@ export function HeroScene() {
           className="absolute inset-0"
           style={{
             background:
-              'radial-gradient(ellipse at 30% 40%, rgba(0,212,170,0.25), transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(224,196,96,0.15), transparent 50%), linear-gradient(180deg, #0a1628 0%, #051020 100%)',
+              'radial-gradient(ellipse at 30% 40%, rgba(212,168,43,0.18), transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(20,30,60,0.6), transparent 50%), linear-gradient(180deg, #0a1628 0%, #051020 100%)',
           }}
         />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjAuNSIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjAzIi8+PC9zdmc+')] opacity-50" />
@@ -231,18 +295,18 @@ export function HeroScene() {
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
       onCreated={({ gl }) => {
-        gl.setClearColor(new THREE.Color('#050d18'), 1);
+        gl.setClearColor(new THREE.Color('#040a14'), 1);
       }}
     >
-      <PerspectiveCamera makeDefault fov={50} position={[10, 6, 10]} />
+      <perspectiveCamera makeDefault fov={45} position={[10, 6, 10]} />
       <AutoCamera />
 
-      <fog attach="fog" args={['#050d18', 14, 32]} />
+      <fog attach="fog" args={['#040a14', 12, 28]} />
 
-      <ambientLight intensity={0.35} color="#5a7a9a" />
+      <ambientLight intensity={0.3} color="#3a4a6a" />
       <directionalLight
         position={[8, 12, 5]}
-        intensity={1.4}
+        intensity={1.1}
         color="#ffe8b8"
         castShadow
         shadow-mapSize={[1024, 1024]}
@@ -252,27 +316,21 @@ export function HeroScene() {
         shadow-camera-top={12}
         shadow-camera-bottom={-12}
       />
-      <pointLight position={[-8, 4, -8]} intensity={0.5} color="#00d4aa" />
-      <pointLight position={[6, 2, 8]} intensity={0.3} color="#E0C460" />
+      <pointLight position={[-6, 4, -6]} intensity={0.6} color="#D4A82B" />
+      <pointLight position={[5, 2, 6]} intensity={0.4} color="#F0CB55" />
+      <pointLight position={[0, 8, 0]} intensity={0.25} color="#5fa9c9" />
 
-      <Stars radius={50} depth={50} count={1500} factor={3} fade speed={0.4} />
+      <Stars radius={50} depth={50} count={1200} factor={2.5} fade speed={0.3} />
       <GoldParticles />
 
-      <Terrain onHover={setHovered} />
-      {PARCELS.map((p) => (
-        <Parcel key={p.id} {...p} hovered={hovered === p.id} onHover={setHovered} />
+      <GroundPlate />
+      <GridLines />
+      {CITY.map((b) => (
+        <Building key={b.id} {...b} hovered={hovered === b.id} onHover={setHovered} />
       ))}
 
-      <OrbitControls
-        enableZoom={false}
-        enablePan={false}
-        minPolarAngle={Math.PI / 4}
-        maxPolarAngle={Math.PI / 2.3}
-        autoRotate={false}
-      />
-
       <EffectComposer multisampling={0}>
-        <Bloom intensity={0.9} luminanceThreshold={0.4} luminanceSmoothing={0.5} mipmapBlur />
+        <Bloom intensity={0.7} luminanceThreshold={0.5} luminanceSmoothing={0.5} mipmapBlur />
         <Vignette eskil={false} offset={0.1} darkness={0.7} />
       </EffectComposer>
     </Canvas>
