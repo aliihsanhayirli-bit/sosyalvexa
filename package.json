@@ -8,8 +8,11 @@
     "dev:all": "node dev.mjs",
     "pb": "backend/pocketbase serve",
     "build": "vite build",
+    "build:staging": "VITE_STAGING=1 vite build",
     "build:check": "tsc -b --noEmit && vite build",
     "preview": "vite preview",
+    "deploy:staging": "scripts/deploy-staging.sh",
+    "deploy:prod": "npm run build && rsync -a --delete dist/ /var/www/temelliarsa/dist/",
     "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "typecheck:all": "tsc -b --noEmit"
   },
