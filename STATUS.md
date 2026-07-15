@@ -1,8 +1,20 @@
-# YCA Yatırım — Agent Env Status & Roadmap
+# GYD Grup — Agent Env Status & Roadmap
 
-> **Son güncelleme:** 2026-07-15 (cumulative: haymana/bala kaldırıldı, listings/regions PB'ye taşındı, RAG 49 chunk, yca-api production, cron backup, 6 security header, contact form fix)
+> **Son güncelleme:** 2026-07-16 (YCA → GYD Grup rebrand; klasör/servis/domain rename; SSL cert gydgrup.com.tr; chat prompt güncel)
+> **Önceki ad:** "YCA Yatırım" (2024–2026 Temmuz) — bu doküman eski projeksiyonu da içerir
 > **Hazırlayan:** opencode (MiniMax-M3) — agent context
-> **Repo:** `/root/yca`
+> **Repo:** `/root/gyd/gyd` → `https://github.com/aliihsanhayirli-bit/gyd`
+
+---
+
+## 0. Rebrand Notu (2026-07-16)
+
+- **Şirket**: YCA TİCARİ YATIRIM DANIŞMANLIK → GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK
+- **Klasör**: `/root/yca` → `/root/gyd/gyd`
+- **Servisler**: `pocketbase.service` → `gyd-pocketbase.service`, `yca-api.service` → `gyd-api.service`
+- **Domain**: `temelliarsa.com` (eski, hâlâ aktif) + `gydgrup.com.tr` (yeni, bu VPS)
+- **API**: `/opt/yca-api/` → `/opt/gyd-api/`, prompt + telefon güncel
+- **Repo**: `aliihsanhayirli-bit/yca` → `aliihsanhayirli-bit/gyd`
 
 ---
 
@@ -10,12 +22,12 @@
 
 | Alan | Değer |
 |---|---|
-| Ürün | Temelli bölgesi arsa alım-satım & yatırım danışmanlığı (Ankara) |
-| Şirket | YCA TİCARİ YATIRIM DANIŞMANLIK LTD. ŞTİ. |
-| Domain | `https://temelliarsa.com` |
-| Versiyon | `0.2.0` |
+| Ürün | Ankara geneli **imarlı arsa** alım-satım, proje geliştirme & yatırım danışmanlığı |
+| Şirket | GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ. |
+| Domain | `https://gydgrup.com.tr` (SSL: 16 Tem-26 → 13 Eki-26) |
+| Versiyon | `0.3.0` (rebrand) |
 | Stack | Vite 5 · React 18 · TypeScript · Three.js · PocketBase · Gemini 1.5 Flash → Lite |
-| Mimari | Müşteri yüzü (`/`) + Admin (`/admin`) + yca-api (chat/RAG/webhook) + PB |
+| Mimari | Müşteri yüzü (`/`) + Admin (`/admin`) + gyd-api (chat/RAG/webhook) + PB |
 
 ---
 
@@ -23,9 +35,9 @@
 
 | Servis | Port | systemd unit | Yönetim |
 |---|---|---|---|
-| nginx 1.24 | 80, 443 | nginx.service | TLS: Let's Encrypt (14 Tem-26 → 12 Eki-26) |
-| pocketbase 0.22.21 | 8090 (loopback) | pocketbase.service | 12/12 migration, override.conf ile GEMINI_API_KEY |
-| yca-api (Node 18+) | 8091 (loopback) | yca-api.service | `/opt/yca-api/server.mjs`, systemd env: GEMINI key, model |
+| nginx 1.24 | 80, 443 | nginx.service | TLS: Let's Encrypt (gydgrup.com.tr 16 Tem-26 → 13 Eki-26; temelliarsa.com 14 Tem-26 → 12 Eki-26) |
+| pocketbase 0.22.21 | 8090 (loopback) | gyd-pocketbase.service | 12/12 migration, override.conf ile GEMINI_API_KEY; veri: `/opt/gyd-pocketbase/pb_data` |
+| gyd-api (Node 18+) | 8091 (loopback) | gyd-api.service | `/opt/gyd-api/server.mjs`, systemd env: GEMINI key, model |
 | (geliştirme) Vite dev | 5173 | (manuel) | local geliştirme, prod'da kullanılmıyor |
 
 ### Nginx akışı
