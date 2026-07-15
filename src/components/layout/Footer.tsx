@@ -59,6 +59,11 @@ export function Footer() {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link to="/kvkk" className="text-sm text-muted-foreground transition-colors hover:text-accent">
+                  KVKK Aydınlatma
+                </Link>
+              </li>
             </ul>
           </div>
 

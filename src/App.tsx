@@ -11,6 +11,7 @@ const Services = lazy(() => import('@/pages/site/Services'));
 const Regions = lazy(() => import('@/pages/site/Regions'));
 const RegionDetail = lazy(() => import('@/pages/site/RegionDetail'));
 const Contact = lazy(() => import('@/pages/site/Contact'));
+const KVKK = lazy(() => import('@/pages/site/KVKK'));
 
 const AdminLogin = lazy(() => import('@/pages/admin/Login'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
@@ -46,6 +47,7 @@ export default function App() {
           <Route path="/bolgeler" element={<Regions />} />
           <Route path="/bolgeler/:slug" element={<RegionDetail />} />
           <Route path="/iletisim" element={<Contact />} />
+          <Route path="/kvkk" element={<KVKK />} />
         </Route>
 
         <Route path="/admin/login" element={<AdminLogin />} />

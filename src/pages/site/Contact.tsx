@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/Badge';
@@ -134,7 +135,11 @@ export default function Contact() {
               Gönder
             </Button>
             <div className="mt-3 text-center text-[11px] text-muted-foreground">
-              Gönderim ile birlikte KVKK kapsamında kişisel verilerinizin işlenmesini kabul etmiş olursunuz.
+              Gönderim ile birlikte{' '}
+              <Link to="/kvkk" target="_blank" className="text-accent hover:underline">
+                KVKK aydınlatma metni
+              </Link>
+              {' '}kapsamında kişisel verilerinizin işlenmesini kabul etmiş olursunuz.
             </div>
           </motion.form>
 
