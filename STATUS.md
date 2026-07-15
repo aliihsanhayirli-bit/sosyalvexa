@@ -1,6 +1,6 @@
 # YCA Yatırım — Agent Env Status & Roadmap
 
-> **Son güncelleme:** 2026-07-15
+> **Son güncelleme:** 2026-07-15 (cumulative: haymana/bala kaldırıldı, listings/regions PB'ye taşındı, RAG 49 chunk, yca-api production, cron backup, 6 security header, contact form fix)
 > **Hazırlayan:** opencode (MiniMax-M3) — agent context
 > **Repo:** `/root/yca`
 
@@ -13,208 +13,252 @@
 | Ürün | Temelli bölgesi arsa alım-satım & yatırım danışmanlığı (Ankara) |
 | Şirket | YCA TİCARİ YATIRIM DANIŞMANLIK LTD. ŞTİ. |
 | Domain | `https://temelliarsa.com` |
-| Versiyon | `0.1.0` |
-| Stack | Vite 5 · React 18 · TypeScript · Three.js · PocketBase · Gemini 1.5 Flash |
-| Mimari | Müşteri yüzü (`/`) + Admin (`/admin`) + Omnichannel bot (Web/WhatsApp/Messenger/IG) |
+| Versiyon | `0.2.0` |
+| Stack | Vite 5 · React 18 · TypeScript · Three.js · PocketBase · Gemini 1.5 Flash → Lite |
+| Mimari | Müşteri yüzü (`/`) + Admin (`/admin`) + yca-api (chat/RAG/webhook) + PB |
 
 ---
 
-## 2. Environment Status (`.env`)
+## 2. Servisler (VPS'te çalışan)
+
+| Servis | Port | systemd unit | Yönetim |
+|---|---|---|---|
+| nginx 1.24 | 80, 443 | nginx.service | TLS: Let's Encrypt (14 Tem-26 → 12 Eki-26) |
+| pocketbase 0.22.21 | 8090 (loopback) | pocketbase.service | 12/12 migration, override.conf ile GEMINI_API_KEY |
+| yca-api (Node 18+) | 8091 (loopback) | yca-api.service | `/opt/yca-api/server.mjs`, systemd env: GEMINI key, model |
+| (geliştirme) Vite dev | 5173 | (manuel) | local geliştirme, prod'da kullanılmıyor |
+
+### Nginx akışı
+```
+İnternet → nginx:443
+  ├─ /api/chat, /api/rag/, /api/webhook/, /api/v1/  → 127.0.0.1:8091 (yca-api)
+  ├─ /api/* (geri kalan: collections, realtime, health) → 127.0.0.1:8090 (PocketBase)
+  ├─ /_/ (PB admin UI) → 127.0.0.1:8090
+  ├─ /assets/* → /var/www/temelliarsa/dist/assets/ (1y immutable cache)
+  └─ /* (HTML SPA) → /var/www/temelliarsa/dist/
+```
+
+### Security header'lar (snippet: `/etc/nginx/snippets/yca-security-headers.conf`)
+Tüm location'larda: HSTS, X-Frame-Options=SAMEORIGIN, X-Content-Type-Options=nosniff, Referrer-Policy, Permissions-Policy, Content-Security-Policy (Vite için unsafe-eval + unsafe-inline).
+
+---
+
+## 3. Environment Status (`.env`)
 
 | Key | Status | Değer / Not |
 |---|---|---|
-| `VITE_POCKETBASE_URL` | ✅ dolu | `https://temelliarsa.com` (prod URL) |
+| `VITE_POCKETBASE_URL` | ✅ dolu | `https://temelliarsa.com` (prod) |
 | `VITE_GEMINI_API_KEY` | ✅ dolu | `REDACTED_GEMINI_KEY` |
-| `VITE_GEMINI_MODEL` | ✅ dolu | `gemini-flash-latest` (alias, en güncel stable Flash) |
+| `VITE_GEMINI_MODEL` | ✅ dolu | `gemini-flash-lite-latest` (lite çalışıyor) |
 | `VITE_WHATSAPP_NUMBER` | ✅ dolu | `905456551070` |
 | `VITE_SITE_URL` | ✅ dolu | `https://temelliarsa.com` |
-| `GEMINI_API_KEY` (server) | ✅ dolu | Vite plugin / PocketBase hook için |
-| `GEMINI_MODEL` | ✅ dolu | `gemini-flash-latest` (alias) |
-| `META_VERIFY_TOKEN` | ✅ dolu | `yca-verify-token` (webhook doğrulama) |
+| `GEMINI_API_KEY` (PB) | ✅ systemd override | aynı key, embed hook için |
+| `GEMINI_MODEL` (PB) | ✅ systemd override | `gemini-flash-lite-latest` |
+| `META_VERIFY_TOKEN` | ✅ dolu | `yca-verify-token` |
 | `META_WA_TOKEN` | ❌ **boş** | WhatsApp Cloud API |
-| `META_WA_PHONE_ID` | ❌ **boş** | WhatsApp phone number ID |
+| `META_WA_PHONE_ID` | ❌ **boş** | WhatsApp phone ID |
 | `META_PAGE_ACCESS_TOKEN` | ❌ **boş** | Messenger + Instagram DM |
-| `PB_ENCRYPTION_KEY` | ⚠️ **plaintext** | `47e22...` rotate edilmeli, güvenlik riski |
+| `PB_ENCRYPTION_KEY` | ⚠️ **plaintext** | rotate edilmeli |
 
-**Özet:** 8/12 anahtar dolu, 3 kritik boş (Meta × 3), 1 güvenlik riski (PB key).
-
----
-
-## 3. Agent Status (opencode runtime)
-
-| Alan | Değer |
-|---|---|
-| Çalışma dizini | `/root` |
-| Proje konumu | `/root/yca` (eski: `/tmp/opencode/yca`) |
-| Aktif servisler | ❌ yok (PocketBase/Vite çalışmıyor) |
-| Zernio API | ✅ canlı, sandbox hazır (`sk_ede16...cd1be9f5`) |
-| Proje son değişiklik | `2026-07-15 02:46` (dist build) |
-| Proje oluşturma | `2026-07-14 00:02` |
-| Disk envanteri | node_modules (244 paket), pocketbase binary 40MB, dist build mevcut |
+**Özet:** 10/12 anahtar dolu, 3 Meta boş, 1 güvenlik riski (PB key rotate).
 
 ---
 
-## 4. Mimari & Özellik Durumu
+## 4. Migrations (PB)
 
-### 4.1 Backend (PocketBase)
+| # | Migration | Açıklama |
+|---|---|---|
+| 1 | `1700000001_create_listings` | arsa portföyü |
+| 2 | `1700000002_create_contacts` | CRM kişileri |
+| 3 | `1700000003_create_conversations` | konuşma thread'leri |
+| 4 | `1700000004_create_messages` | tüm kanallardan mesajlar |
+| 5 | `1700000005_create_timeline_events` | aktivite timeline |
+| 6 | `1700000006_create_bot_documents` | RAG dökümanları |
+| 7 | `1700000007_create_bot_settings` | bot system prompt, hoşgeldin |
+| 8 | `1700000008_create_contact_submissions` | iletişim formu |
+| 9 | `1700000009_create_settings` | şirket ayarları (singleton) |
+| 10 | `1700000010_relax_bot_documents_rules` | RAG public okuma |
+| 11 | `1700000011_add_company_tax_fields` | settings'e `tax_office` + `vkn` |
+| 12 | `1700000012_create_regions` | bölgeler (description, stats, highlights JSON) |
 
-**Binary:** `backend/pocketbase` (Linux, 40MB, çalıştırılabilir)
-**Data:** `backend/pb_data/` (SQLite, git'te yok)
-**Migrations (8 collection):**
-- `1700000001_create_listings` — arsa portföyü
-- `1700000002_create_contacts` — CRM kişileri (alıcı/satıcı)
-- `1700000003_create_conversations` — konuşma thread'leri
-- `1700000004_create_messages` — mesajlar (tüm kanallar)
-- `1700000005_create_timeline_events` — aktivite timeline
-- `1700000006_create_bot_documents` — RAG dokümanları
-- `1700000007_create_bot_settings` — bot system prompt, hoşgeldin
-- `1700000008_create_contact_submissions` — iletişim formu
+**Hook'lar (`/opt/yca-pocketbase/pb_hooks/`):**
+- `messages.pb.js` ✅ aktif
+- `embed.pb.js` ✅ aktif (text-embedding-004 → gemini-embedding-001)
+- `bootstrap.pb.js.disabled` ❌ (admin zaten var)
 
-**Hooks:**
-- `messages.pb.js` ✅ aktif (mesaj alındığında otomatik timeline)
-- `bootstrap.pb.js.disabled` ❌ pasif
+---
 
-**Admin UI:** `http://localhost:8090/_/` (henüz hesap oluşturulmadı)
+## 5. Frontend (Vite + React) — `src/`
 
-### 4.2 Frontend (Vite + React)
+### Pages
+**Site:**
+- `site/Home.tsx` — PB'den `featured=true` listings çekiyor (gerçek fotoğraflar)
+- `site/Listings.tsx` — PB'den tüm yayınlanmış arsalar, filtreleme + sıralama
+- `site/ListingDetail.tsx` — slug ile PB'den, foto galerisi, features, konum kartı
+- `site/RegionDetail.tsx` — slug ile PB `regions` collection'dan
+- `site/Regions.tsx` — bölge kartları, PB `regions` collection'dan
+- `site/About.tsx`, `site/Services.tsx`, `site/Contact.tsx` — statik
+- `site/Contact.tsx` — form PocketBase'e `contact_submissions` POST ediyor (önceki stub kaldırıldı)
 
-**Pages:**
-- `site/` — Müşteri yüzü (anasayfa, portföy, arsa detay, 6 bölge, iletişim)
-- `admin/` — Yönetim paneli (dashboard, arsa CRUD, CRM Kanban, kişi kartı, konuşmalar, bot/RAG, takım, ayarlar)
-- `NotFound.tsx`
+**Admin:**
+- `admin/Dashboard.tsx`, `admin/Listings.tsx`, `admin/ListingEdit.tsx`
+- `admin/Contacts.tsx`, `admin/ContactDetail.tsx` (Kanban + drag-drop)
+- `admin/Conversations.tsx`
+- `admin/Bot.tsx` (RAG yükleme + /api/rag/embed)
+- `admin/Settings.tsx`, `admin/Users.tsx`, `admin/Login.tsx`
 
-**Components:**
-- `ui/` — shadcn-tarzı primitives
+### Components
+- `ui/` — Badge, Button, Form, Card (shadcn-tarzı)
 - `layout/` — SiteLayout, AdminLayout, Header, Footer
-- `three/` — Hero3D (Three.js sahnesi)
-- `chat/` — ChatWidget (Gemini client + RAG)
+- `three/` — Hero3D (Three.js topografik harita)
+- `chat/` — ChatWidget (Gemini + RAG via yca-api)
 
-**Vite plugin:** `vite/api-plugin.js` → dev'de `/api/chat` + `/api/webhook/meta` endpoint'leri
-
-**Build:** ✅ `dist/` mevcut (Vite production build)
-
-### 4.3 Özellik Matrisi
-
-| Özellik | Durum |
-|---|---|
-| 3D Hero (Temelli topografik harita) | ✅ tamamlandı |
-| Arsa portföyü (grid + harita + filtre) | ✅ tamamlandı |
-| 6 bölge için SEO sayfaları | ✅ tamamlandı |
-| Admin dashboard (KPI, trend, pipeline) | ✅ tamamlandı |
-| Arsa CRUD (çoklu fotoğraf) | ✅ tamamlandı |
-| CRM Kanban (drag-drop, dikey) | ✅ tamamlandı |
-| Kişi kartı (timeline, konum foto) | ✅ tamamlandı |
-| Bot & RAG (system prompt, doküman yükleme) | ✅ UI tamamlandı, ❌ içerik yok |
-| Web Chat (Gemini + RAG) | ⚠️ UI hazır, key eksik |
-| WhatsApp Cloud API | ⚠️ kod hazır, token eksik |
-| Facebook Messenger | ⚠️ kod hazır, token eksik |
-| Instagram DM | ⚠️ kod hazır, token eksik |
-| Zernio entegrasyonu | ❌ kod yok (kararlaştırıldı) |
-| RAG dokümanları | ❌ hiç yüklenmemiş |
-| PocketBase admin hesabı | ❌ oluşturulmadı |
-| Production veri (arsalar) | ❌ PocketBase boş |
+### Code-splitting (vite.config.ts manualChunks)
+- `three` (1.0MB), `pocketbase` (33KB), `gemini` (28KB)
+- Per-page chunks: Home, Listings, ListingDetail, Contact, About, vb.
 
 ---
 
-## 5. Roadmap
+## 6. API Endpoints (HTTPS üzerinden)
 
-### 🟢 Kısa Vade (1-2 hafta) — "Çalışır hale getir"
-
-| # | Görev | Bağımlılık | Effort |
+| Method | URL | Yönlendirme | Auth |
 |---|---|---|---|
-| 1 | `.env`'e Gemini key ekle (client + server) | key paylaşıldı, 1 dk | XS |
-| 2 | PocketBase admin hesabı oluştur (`./pocketbase admin create ...`) | — | XS |
-| 3 | İlk 5-10 Temelli arsası ekle (gerçek veri) | PocketBase admin | S |
-| 4 | RAG dokümanları yükle (imar durumu, tapu süreçleri, fiyat analizi PDF/MD) | admin hesabı | S |
-| 5 | Meta WhatsApp Cloud API setup → `META_WA_TOKEN`, `META_WA_PHONE_ID` | business.facebook.com'da WABA | M |
-| 6 | Meta Messenger + Instagram setup → `META_PAGE_ACCESS_TOKEN` | aynı Meta App | S |
-| 7 | Webhook signature doğrulama (X-Hub-Signature-256) | `META_VERIFY_TOKEN` var | S |
-| 8 | `PB_ENCRYPTION_KEY` rotate + `.env`'i `.gitignore`'dan koruma | — | S |
-
-### 🟡 Orta Vade (1-2 ay) — "Gerçek müşteri akışı"
-
-| # | Görev | Not |
-|---|---|---|
-| 9 | **Zernio entegrasyonu** (kararlaştırıldı) | `lib/zernio.ts` + `lib/zernio-webhook.ts`, broadcasts + inbox API, sandbox'ı atla (gerçek bağlantı gerekli) |
-| 10 | Bot akış testi (alıcı/satıcı intent, danışmana devir) | Gemini key ile birlikte |
-| 11 | Rate limiting (Gemini API + webhook'lar) | abuse önleme |
-| 12 | Admin panel güvenliği (IP whitelist, 2FA, role-based) | production öncesi |
-| 13 | CRM pipeline görselleştirme (recharts) | dashboard zaten trend gösteriyor |
-| 14 | Contact submission → contact otomatik merge (formdan gelen lead) | pb_hooks |
-| 15 | Konuşma arşivleme + retention policy | veri büyümesi |
-
-### 🔵 Uzun Vade (3+ ay) — "Ölçek & multi-tenant"
-
-| # | Görev | Not |
-|---|---|---|
-| 16 | Production deploy (Vercel frontend + Oracle Cloud Free Tier PocketBase) | docs/DEPLOY.md takip et |
-| 17 | Monitoring (UptimeRobot, Sentry, log aggregation) | PocketBase Go log + Sentry |
-| 18 | A/B test (bot vs insan, response time) | Gemini token tracking |
-| 19 | Multi-tenant (her müşteri = 1 profile) | Zernio multi-tenant rehberi uygulanabilir |
-| 20 | Zernio MCP server entegrasyonu | `mcp.zernio.com` → AI agent'lar (Claude, Cursor) |
-| 21 | Mobile app (React Native + Three.js) | 3D harita + CRM |
-| 22 | Click-to-WhatsApp Ads (Meta CTWA) | Zernio `platforms/whatsapp/ctwa` |
+| GET | `/` ve SPA rotaları | dist/ | public |
+| GET | `/assets/*` | dist/assets/ | public, 1y cache |
+| GET | `/robots.txt`, `/sitemap.xml` | dist/ | public |
+| GET/POST/PATCH/DELETE | `/api/collections/*` | PocketBase 8090 | collection rule'a göre |
+| GET | `/api/realtime` (SSE) | PocketBase 8090 | public (PB_CONNECT) |
+| GET | `/_/` (PB admin) | PocketBase 8090 | superuser |
+| POST | `/api/chat` | yca-api 8091 | public, RAG + Gemini |
+| POST | `/api/rag/embed` | yca-api 8091 | public (admin panelden çağrılır) |
+| GET/POST | `/api/webhook/meta` | yca-api 8091 | public (verify_token kontrolü) |
+| GET | `/api/v1/health` | yca-api 8091 | public |
 
 ---
 
-## 6. Bilinen Riskler & Kararlar
+## 7. RAG Bilgi Tabanı (`bot_documents`)
+
+| # | Başlık | Chunk | Embedding | Aktif |
+|---|---|---|---|---|
+| 1 | Temelli ve Ankara Bölgesi Arsa Danışmanlık Bilgi Tabanı | 17 | 680 KB | ✅ |
+| 2 | Temelli Bölgesi Sık Sorulan Sorular ve Müşteri Senaryoları | 14 | 560 KB | ✅ |
+| 3 | Ankara İmar Rehberi ve Mevzuat Bilgi Tabanı | 18 | 720 KB | ✅ |
+| **Toplam** | | **49 chunk** | **1.96 MB** | |
+
+**Model:** `gemini-embedding-001` (3072-dim)
+**Chunk stratejisi:** 800 char, 100 overlap
+**Retrieval:** cosine similarity, top-4
+
+---
+
+## 8. Veri Durumu (anlık)
+
+| Tablo | Kayıt | Yorum |
+|---|---|---|
+| `listings` | 1 | Temelli Hürriyet 3019/17, 599K TL, featured, 1 fotoğraf |
+| `contacts` | 1 | Ahmet Yılmaz (test) |
+| `conversations` | 1 | web kanalı, bot aktif |
+| `messages` | 1 | customer'dan ilk mesaj |
+| `timeline_events` | 2 | 1 manuel + 1 messages hook'undan |
+| `bot_documents` | 3 | yukarıdaki tablo |
+| `bot_settings` | 1 | mevcut |
+| `settings` | 1 | tam, VKN dahil |
+| `regions` | 4 | Temelli, Polatlı, Çankaya, Etimesgut |
+| `users` | 1 | admin verified |
+| `_admins` | 1 | `admin@ycayatirim.com.tr` / Yca2024!AdminPass! |
+
+**Backups:** 7 günlük retention, `/opt/yca-pocketbase/pb_data/backups/`, cron 03:00.
+
+---
+
+## 9. Bilinen Riskler
 
 ### 🔴 Yüksek risk
-- **`PB_ENCRYPTION_KEY` plaintext `.env`'de** — git history'de de olabilir, rotate + history temizle
-- **Meta token'lar boş** → WhatsApp/Messenger/IG tamamen devre dışı
-- **Production PocketBase'da admin hesabı yok** → yönetim kilitli
+- **`PB_ENCRYPTION_KEY` plaintext** (git'te olabilir) → rotate + history temizle
+- **Meta token'lar boş** → omnichannel kapalı
 
 ### 🟡 Orta risk
-- **Gemini key boş** → chat widget 401 verir
-- **RAG dokümanı yok** → bot generic cevap verir
-- **PocketBase veri yok** → portföy boş, demo yapılamaz
+- **Tek RAG chunk store** (PB SQLite) → embed'ler büyüdükçe bloat olabilir
+- **Backup'lar VPS-local** → VPS çökerse backup da gider
+- **Sentry/UptimeRobot yok** → sorun olduğunda geç haber alma
 
-### 🟢 Çözülmüş
-- **Zernio yönü kararlaştırıldı** (önceki tur, kullanıcı onayı)
-- **Proje iskeleti sağlam** (8 migration, hooks, 3D, Kanban CRM)
-- **Vite plugin çalışıyor** (dev'de API endpoint'leri hazır)
-- **Build çıktısı mevcut** (`dist/` deploy edilebilir)
-
-### 💡 Mimari kararlar
-- **Zernio seçildi, direkt Meta değil** — tek API, OAuth karmaşıklığı yok, sandbox test edildi
-- **PocketBase + Vite** — self-hosted, ~$0/ay maliyet (Oracle Free Tier)
-- **Gemini 1.5 Flash** — ücretsiz tier (1500 istek/gün), RAG için yeterli
+### 🟢 Düşük risk
+- **Frontend statik fallback'ler** (Listings, RegionDetail, Home) — PB boşsa graceful degradation
+- **Staging ortamı yok** — prod'da test
 
 ---
 
-## 7. Hemen Sonraki Adımlar (1 saat içinde)
+## 10. Roadmap
+
+### 🟢 Tamamlandı (son 24 saat)
+- [x] Production HTTPS, tüm sayfalar 200
+- [x] PocketBase admin auth + CRM test (1 contact, conv, msg, timeline)
+- [x] Fotoğraf yükleme + public URL erişim
+- [x] PB backup + cron (her gün 03:00, 7 gün retention)
+- [x] Listings/ListingDetail/Regions/RegionDetail → PocketBase
+- [x] Home FEATURED → PocketBase
+- [x] Contact form → PocketBase (önceki stub kaldırıldı)
+- [x] Haymana + Bala bölgeleri kaldırıldı (4 bölge kaldı)
+- [x] /api/chat + /api/rag/embed + /api/webhook/meta production'da
+- [x] Nginx security headers (snippet ile tüm location'lar)
+- [x] Gemini model switch: gemini-flash-latest → gemini-flash-lite-latest (kota çözümü)
+- [x] Embedding model: text-embedding-004 → gemini-embedding-001
+- [x] 3 RAG dokümanı (49 chunk, 1.96 MB)
+- [x] Sitemap + robots.txt düzeltme (domain temiz, 4 bölge)
+- [x] Settings: tax_office + vkn eklendi (migration 11)
+- [x] Regions collection + 4 bölge seed
+
+### 🟡 Orta vadeli (1-2 hafta)
+- [ ] PB_ENCRYPTION_KEY rotate + git history temizle
+- [ ] YCA admin şifre rotate (Yca2024!AdminPass! plaintext bırakıldı)
+- [ ] Meta WhatsApp Cloud API setup (WABA onayı 1-2 gün)
+- [ ] Sentry error tracking
+- [ ] UptimeRobot veya BetterStack monitoring
+- [ ] Backup'ı VPS dışına taşı (S3 veya başka VPS'e rsync)
+- [ ] 2. arsa ekleme (portföy zenginleştirme)
+- [ ] Bot system prompt admin panelden (bot_settings collection zaten var)
+
+### 🔵 Uzun vadeli (1+ ay)
+- [ ] Staging ortamı
+- [ ] A/B test (bot vs insan response time)
+- [ ] KVKK aydınlatma metni (form'da referans var, henüz sayfa yok)
+- [ ] Mobile app veya PWA
+- [ ] Zernio entegrasyonu (omnichannel inbox)
+
+---
+
+## 11. Sık Kullanılan Komutlar
 
 ```bash
-# 1. PocketBase admin hesabı oluştur
-cd /root/yca/backend
-./pocketbase admin create admin@ycayatirim.com.tr 'GucluSifre!'
+# Servisleri kontrol
+systemctl status nginx pocketbase yca-api
 
-# 2. .env'e Gemini key ekle (key paylaşıldı, eklenmedi)
-# /root/yca/.env → VITE_GEMINI_API_KEY ve GEMINI_API_KEY satırları
+# Loglar
+journalctl -u pocketbase -n 30 --no-pager
+journalctl -u yca-api -n 30 --no-pager
+tail -f /var/log/nginx/access.log
 
-# 3. Dev server başlat (PocketBase + Vite)
-cd /root/yca && npm run dev:all
-# → http://localhost:5173 (site)
-# → http://localhost:8090/_/ (admin)
+# Yeni arsa ekle (PB admin API)
+TOKEN=$(curl -s -X POST https://temelliarsa.com/api/admins/auth-with-password \
+  -H "Content-Type: application/json" \
+  -d '{"identity":"admin@ycayatirim.com.tr","password":"Yca2024!AdminPass!"}' \
+  | python3 -c "import json,sys; print(json.load(sys.stdin)['token'])")
+curl -X POST https://temelliarsa.com/api/collections/listings/records \
+  -H "Authorization: $TOKEN" -H "Content-Type: application/json" \
+  -d '{"title":"...","slug":"...","price":...,"currency":"TRY","area_m2":...,...}'
+
+# Yeni RAG dökümanı ekle
+# 1) bot_documents'a INSERT (raw_text ile)
+# 2) /api/rag/embed tetikle → chunk + Gemini embed
+# 3) active=true yap
+
+# Deploy frontend
+cd /root/yca && npm run build && rsync -a --delete dist/ /var/www/temelliarsa/dist/
+
+# Backup al (manuel)
+/opt/yca-pocketbase/backup.sh
 ```
 
-Sonra admin UI'dan:
-- İlk 5 arsayı ekle (fotoğraflı, imar bilgisi, fiyat, konum)
-- Bot system prompt'u ayarla
-- RAG için 2-3 temel doküman yükle (PDF)
-
 ---
 
-## 8. Bağlantılı Kaynaklar
-
-- `docs/SETUP.md` — Detaylı kurulum
-- `docs/DEPLOY.md` — Vercel + Oracle Cloud deploy
-- `docs/META-SETUP.md` — WhatsApp/Messenger/Instagram bağlama
-- `docs/RAG.md` — RAG pipeline, embedding yükleme
-- `docs/CRM.md` — CRM kullanım kılavuzu
-- Zernio API: `https://docs.zernio.com` (Turkish kapsam dışı, İngilizce)
-- Zernio MCP: `https://mcp.zernio.com` (AI agent integration)
-
----
-
-*Bu dosya opencode tarafından otomatik oluşturuldu. Güncelleme için: `> regenerate status` komutu veya manuel düzenleme.*
+*Bu dosya opencode tarafından otomatik güncellendi. Cumulative: Temmuz 15 2026 - haymana/bala, listings/regions PB, RAG 49 chunk, yca-api, cron backup, security headers, contact fix.*
