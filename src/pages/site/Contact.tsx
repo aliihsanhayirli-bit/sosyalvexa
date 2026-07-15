@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { Input, Textarea, Select } from '@/components/ui/Form';
 import { Phone, Mail, MapPin, MessageCircle, Clock, Send, Loader2 } from 'lucide-react';
 import { COMPANY } from '@/lib/constants';
+import { pb } from '@/lib/pb';
 
 export default function Contact() {
   const [loading, setLoading] = useState(false);
@@ -20,11 +21,25 @@ export default function Contact() {
       return;
     }
     setLoading(true);
-    // Burada PocketBase'e POST atacak şekilde değiştirilecek
-    await new Promise((r) => setTimeout(r, 800));
-    toast.success('Mesajınız alındı! En kısa sürede dönüş yapacağız.');
-    setForm({ name: '', phone: '', email: '', type: 'buyer', subject: '', message: '' });
-    setLoading(false);
+    try {
+      await pb.collection('contact_submissions').create({
+        name: form.name.trim(),
+        phone: form.phone.trim(),
+        email: form.email.trim() || undefined,
+        type: form.type,
+        subject: form.subject.trim() || undefined,
+        message: form.message.trim(),
+        status: 'new',
+        source_url: typeof window !== 'undefined' ? window.location.href : undefined,
+      });
+      toast.success('Mesajınız alındı! En kısa sürede dönüş yapacağız.');
+      setForm({ name: '', phone: '', email: '', type: 'buyer', subject: '', message: '' });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Bilinmeyen hata';
+      toast.error('Gönderim başarısız: ' + msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
