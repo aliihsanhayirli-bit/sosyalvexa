@@ -105,6 +105,22 @@ npm run deploy:prod          # build + rsync /var/www/gydgrup/dist/
 | `META_PAGE_ACCESS_TOKEN` | FB/IG Graph API |
 | `PB_ENCRYPTION_KEY` | PocketBase 32+ rastgele karakter |
 
+## Meta Entegrasyonu
+
+| Alan | Değer |
+|---|---|
+| Meta App adı | **gydgrup** (eskiden "n8nai") |
+| App ID | `1721626692079061` |
+| App Secret | `/opt/gyd-api/.env` → `META_APP_SECRET` |
+| WABA adı | Gyd Grup |
+| Webhook URL (Meta → n8n) | `https://n8n.srv885711.hstgr.cloud/webhook/...` (n8n tarafında) |
+| Webhook URL (n8n → gyd-api) | `https://gydgrup.com.tr/api/webhook/meta` |
+| Verify Token | `gyd-verify-token` |
+| OAuth2 | PocketBase'te Facebook + Instagram `enabled=true` |
+| Yetki verilmemiş | `META_WA_PHONE_ID`, `META_WA_TOKEN`, `META_PAGE_ACCESS_TOKEN` — Meta App dashboard'dan alınacak |
+
+Meta App ID ve Secret bağlantıyı bozmaz, sadece PocketBase OAuth2 `clientId` alanı numeric ID tutar — rename sonrası dokunmaya gerek yok.
+
 ## Kodlama Kuralları
 
 1. **Şirket bilgisi** tek kaynaktan gelsin: `COMPANY` (constants.ts). Yeni bir yere telefon/e-posta/adres hard-code etme.
