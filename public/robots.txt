@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://ycayatirim.com.tr/sitemap.xml
+Sitemap: https://temelliarsa.com/sitemap.xml

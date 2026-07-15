@@ -1,43 +1,58 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ycayatirim.com.tr/</loc>
+    <loc>https://temelliarsa.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://ycayatirim.com.tr/arsalar</loc>
+    <loc>https://temelliarsa.com/arsalar</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://ycayatirim.com.tr/hakkimizda</loc>
+    <loc>https://temelliarsa.com/hakkimizda</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ycayatirim.com.tr/hizmetler</loc>
+    <loc>https://temelliarsa.com/hizmetler</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ycayatirim.com.tr/bolgeler</loc>
+    <loc>https://temelliarsa.com/bolgeler</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ycayatirim.com.tr/bolgeler/temelli</loc>
+    <loc>https://temelliarsa.com/bolgeler/temelli</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ycayatirim.com.tr/bolgeler/polatli</loc>
+    <loc>https://temelliarsa.com/bolgeler/polatli</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://temelliarsa.com/bolgeler/cankaya</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://temelliarsa.com/bolgeler/etimesgut</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://ycayatirim.com.tr/iletisim</loc>
+    <loc>https://temelliarsa.com/iletisim</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://temelliarsa.com/kvkk</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
   </url>
 </urlset>
