@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Award, TrendingUp, Users, Map, Sparkles, Building2, HandshakeIcon } from 'lucide-react';
@@ -6,11 +7,24 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { SERVICES, STATS, REGIONS, COMPANY } from '@/lib/constants';
 import { formatPrice, formatArea } from '@/lib/utils';
+import { pb, getFileUrl } from '@/lib/pb';
 
-const FEATURED = [
-  { id: 1, title: 'Temelli Merkez · 1.250 m² İmarlı Arsa', price: 2400000, area: 1250, region: 'Temelli', tag: 'Yeni' },
-  { id: 2, title: 'Polatlı Yolu Üzeri · Konut İmarlı', price: 1850000, area: 980, region: 'Polatlı', tag: 'Fırsat' },
-  { id: 3, title: 'Sincan Sanayi Yanı · 1.640 m² Yatırımlık', price: 3100000, area: 1640, region: 'Sincan', tag: 'Popüler' },
+interface FeaturedListing {
+  id: string;
+  collectionId: string;
+  slug: string;
+  title: string;
+  price: number;
+  currency: string;
+  area_m2: number;
+  region: string;
+  photos: string[];
+}
+
+const FALLBACK_FEATURED: { id: string; title: string; price: number; area: number; region: string; tag: string }[] = [
+  { id: 'f1', title: 'Temelli Merkez · 1.250 m² İmarlı Konut Arsası', price: 2400000, area: 1250, region: 'Temelli', tag: 'Yeni' },
+  { id: 'f2', title: 'Polatlı Yolu Üzeri · 980 m² Konut İmarlı', price: 1850000, area: 980, region: 'Polatlı', tag: 'Fırsat' },
+  { id: 'f3', title: 'Sincan Sanayi Yanı · 1.640 m² Yatırımlık', price: 3100000, area: 1640, region: 'Sincan', tag: 'Popüler' },
 ];
 
 const WHY = [
@@ -23,6 +37,30 @@ const WHY = [
 const fadeIn = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
 export default function Home() {
+  const [featured, setFeatured] = useState<FeaturedListing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { items } = await pb.collection('listings').getList<FeaturedListing>(1, 4, {
+          filter: 'published = true',
+          sort: '-featured,-created',
+        });
+        if (!cancelled) setFeatured(items);
+      } catch {
+        // Hata olursa boş bırak, fallback gösterilir
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const showFallback = !loading && featured.length === 0;
+  const featuredToShow = featured.length > 0 ? featured : (showFallback ? FALLBACK_FEATURED : []);
+
   return (
     <>
       <Hero3D />
@@ -78,35 +116,55 @@ export default function Home() {
         </motion.div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {FEATURED.map((l, i) => (
-            <motion.div
-              key={l.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.08 }}
-              className="group overflow-hidden rounded-xl border border-white/[0.06] bg-card/40 backdrop-blur-sm transition-all hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10"
-            >
-              <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/40 to-accent/20">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(0,212,170,0.4),transparent_60%)]" />
-                <div className="absolute inset-0 flex items-center justify-center text-foreground/30">
-                  <Building2 className="h-12 w-12" />
-                </div>
-                <Badge className="absolute left-3 top-3" variant="gold">{l.tag}</Badge>
-              </div>
-              <div className="p-4">
-                <div className="mb-1 text-xs uppercase tracking-wider text-accent">{l.region}</div>
-                <h3 className="line-clamp-1 font-display text-lg font-semibold text-foreground">{l.title}</h3>
-                <div className="mt-3 flex items-end justify-between border-t border-white/[0.06] pt-3">
-                  <div>
-                    <div className="text-xs text-muted-foreground">{formatArea(l.area)}</div>
-                    <div className="font-display text-lg font-semibold text-foreground">{formatPrice(l.price)}</div>
-                  </div>
-                  <Link to="/arsalar" className="text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">Detay →</Link>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+          {featuredToShow.length === 0 ? (
+            <div className="col-span-full rounded-xl border border-white/[0.06] bg-card/40 p-12 text-center text-sm text-muted-foreground">
+              Henüz öne çıkan arsa eklenmemiş. Admin panelden <code className="rounded bg-white/5 px-1.5 py-0.5">featured=true</code> olarak işaretleyin.
+            </div>
+          ) : (
+            featuredToShow.map((l, i) => {
+              const isFallback = !('collectionId' in l);
+              const url = !isFallback && l.photos && l.photos.length > 0
+                ? getFileUrl({ collectionId: l.collectionId, id: l.id }, l.photos[0])
+                : null;
+              return (
+                <motion.div
+                  key={l.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: i * 0.08 }}
+                  className="group overflow-hidden rounded-xl border border-white/[0.06] bg-card/40 backdrop-blur-sm transition-all hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10"
+                >
+                  <Link to={`/arsalar/${('slug' in l && l.slug) || ''}`} className="block">
+                    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/40 to-accent/20">
+                      {url ? (
+                        <img src={url} alt={l.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      ) : (
+                        <>
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(0,212,170,0.4),transparent_60%)]" />
+                          <div className="absolute inset-0 flex items-center justify-center text-foreground/30">
+                            <Building2 className="h-12 w-12" />
+                          </div>
+                        </>
+                      )}
+                      {('tag' in l) && l.tag && <Badge className="absolute left-3 top-3" variant="gold">{l.tag}</Badge>}
+                    </div>
+                    <div className="p-4">
+                      <div className="mb-1 text-xs uppercase tracking-wider text-accent">{l.region}</div>
+                      <h3 className="line-clamp-1 font-display text-lg font-semibold text-foreground">{l.title}</h3>
+                      <div className="mt-3 flex items-end justify-between border-t border-white/[0.06] pt-3">
+                        <div>
+                          <div className="text-xs text-muted-foreground">{formatArea(l.area_m2 ?? l.area)}</div>
+                          <div className="font-display text-lg font-semibold text-foreground">{formatPrice(l.price, (('currency' in l && l.currency as 'TRY' | 'USD') || 'TRY'))}</div>
+                        </div>
+                        <span className="text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">Detay →</span>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              );
+            })
+          )}
         </div>
       </section>
 
