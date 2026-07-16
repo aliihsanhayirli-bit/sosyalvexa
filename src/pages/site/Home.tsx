@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Award, TrendingUp, Users, Map, Sparkles, Building2, HandshakeIcon } from 'lucide-react';
+import { ShieldCheck, Award, TrendingUp, Users, Map, Sparkles, Building2, HandshakeIcon, Bot } from 'lucide-react';
 import { Hero3D } from '@/components/three/Hero3D';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -64,6 +64,31 @@ export default function Home() {
   return (
     <>
       <Hero3D />
+
+      {/* DİJİTAL DÖNÜŞÜM BANNER */}
+      <section className="container-wide pt-10 sm:pt-14">
+        <motion.div
+          {...fadeIn}
+          className="relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/80 p-5 sm:p-6"
+        >
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_50%,rgba(212,168,43,0.18),transparent_55%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_50%,rgba(212,168,43,0.12),transparent_55%)]" />
+          <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:gap-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent ring-1 ring-accent/30">
+              <Bot className="h-6 w-6" />
+            </div>
+            <div className="flex-1">
+              <div className="mb-1 inline-flex items-center gap-2">
+                <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Yeni</span>
+              </div>
+              <p className="font-display text-base leading-relaxed text-foreground sm:text-lg">
+                Dijital dönüşümümüz tamamlandı, <span className="gold-text italic">Yapay Zeka Çalışanlarımızla</span> hizmet vermeye devam ediyoruz.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+      </section>
 
       {/* SERVİSLER */}
       <section className="container-wide py-32">
