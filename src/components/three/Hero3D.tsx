@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars, Html } from '@react-three/drei';
+import { Stars, Html, PerspectiveCamera } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
@@ -97,7 +97,7 @@ const WINDOW_TEXTURE = (() => {
 })();
 
 function Building({
-  x, z, w, d, h, premium, label, price, area, hovered, onHover,
+  id, x, z, w, d, h, premium, label, price, area, hovered, onHover,
 }: BuildingSeed & { hovered: boolean; onHover: (id: number | null) => void }) {
   const ref = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Mesh>(null);
@@ -298,7 +298,7 @@ export function HeroScene() {
         gl.setClearColor(new THREE.Color('#040a14'), 1);
       }}
     >
-      <perspectiveCamera makeDefault fov={45} position={[10, 6, 10]} />
+      <PerspectiveCamera makeDefault fov={45} position={[10, 6, 10]} />
       <AutoCamera />
 
       <fog attach="fog" args={['#040a14', 12, 28]} />
