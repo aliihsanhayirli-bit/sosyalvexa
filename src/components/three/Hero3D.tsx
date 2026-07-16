@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, PerspectiveCamera } from '@react-three/drei';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import { Canvas, useFrame, useThree, useLoader } from '@react-three/fiber';
+import { Html, PerspectiveCamera, OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
-import { motion } from 'framer-motion';
-import { Building2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Building2, MapPin } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { pb, getFileUrl } from '@/lib/pb';
 import { formatPrice, formatArea } from '@/lib/utils';
@@ -21,29 +21,33 @@ const STATUS_LABELS: Record<string, string> = {
   sold: 'Satıldı',
 };
 
-const REGION_POS: Record<string, [number, number]> = {
-  cankaya:    [ 0,  0],
-  altindag:   [ 0, -3],
-  yenimahalle: [ 2, -5],
-  kecioren:   [ 4, -4],
-  pursaklar:  [ 6, -5],
-  mamak:      [ 3,  0],
-  etimesgut:  [-4, -2],
-  sincan:     [-4, -5],
-  polatli:    [-8, -9],
+const REGION_CENTER: Record<string, [number, number]> = {
+  cankaya:    [39.92, 32.85],
+  altindag:   [39.96, 32.86],
+  yenimahalle:[39.97, 32.81],
+  kecioren:   [40.00, 32.86],
+  pursaklar:  [40.04, 32.89],
+  mamak:      [39.94, 32.91],
+  etimesgut:  [39.95, 32.69],
+  sincan:     [39.97, 32.58],
+  polatli:    [39.58, 32.14],
 };
 
-const REGION_TONES: Record<string, THREE.Color> = {
-  cankaya:    new THREE.Color('#0f1d3a'),
-  altindag:   new THREE.Color('#0d1b32'),
-  yenimahalle: new THREE.Color('#0b1930'),
-  kecioren:   new THREE.Color('#122242'),
-  pursaklar:  new THREE.Color('#0a1c34'),
-  mamak:      new THREE.Color('#0c1830'),
-  etimesgut:  new THREE.Color('#0a1628'),
-  sincan:     new THREE.Color('#0d1f36'),
-  polatli:    new THREE.Color('#0a1828'),
-};
+const ANKARA_CENTER: [number, number] = [39.92, 32.85];
+const PLANE_HALF = 24;
+const KM_PER_UNIT = 1.2;
+
+function latLngToXZ(lat: number, lng: number): [number, number] {
+  const x = (lng - ANKARA_CENTER[1]) * (85 / KM_PER_UNIT) / 40 * PLANE_HALF / 12;
+  const z = -(lat - ANKARA_CENTER[0]) * (111 / KM_PER_UNIT) / 40 * PLANE_HALF / 12;
+  return [x, z];
+}
+
+function regionToXZ(slug: string): [number, number] {
+  const c = REGION_CENTER[slug.toLowerCase()];
+  if (!c) return [0, 0];
+  return latLngToXZ(c[0], c[1]);
+}
 
 interface Listing {
   id: string;
@@ -56,19 +60,15 @@ interface Listing {
   region: string;
   status: string;
   photos: string[];
-}
-
-function getRegionPos(slug?: string): [number, number] {
-  if (!slug) return [0, 0];
-  return REGION_POS[slug.toLowerCase()] || [0, 0];
+  lat?: number;
+  lng?: number;
 }
 
 function noise2D(x: number, z: number): number {
   return (
-    Math.sin(x * 0.32) * 0.55 +
-    Math.cos(z * 0.41) * 0.35 +
-    Math.sin(x * 0.73 + z * 0.51) * 0.22 +
-    Math.cos(x * 1.21 - z * 0.83) * 0.16
+    Math.sin(x * 0.32) * 0.45 +
+    Math.cos(z * 0.41) * 0.30 +
+    Math.sin(x * 0.73 + z * 0.51) * 0.18
   );
 }
 
@@ -76,16 +76,6 @@ function hashId(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
   return Math.abs(h);
-}
-
-function nearestRegion(x: number, z: number): string {
-  let nearest = 'cankaya';
-  let minDist = Infinity;
-  for (const [slug, [rx, rz]] of Object.entries(REGION_POS)) {
-    const d = (x - rx) ** 2 + (z - rz) ** 2;
-    if (d < minDist) { minDist = d; nearest = slug; }
-  }
-  return nearest;
 }
 
 function generateParcelShape(id: string, baseR: number): THREE.Shape {
@@ -107,26 +97,18 @@ function generateParcelShape(id: string, baseR: number): THREE.Shape {
 
 const WINDOW_TEXTURE = (() => {
   const c = document.createElement('canvas');
-  c.width = 64;
-  c.height = 128;
+  c.width = 64; c.height = 128;
   const ctx = c.getContext('2d')!;
   ctx.fillStyle = '#0a1628';
   ctx.fillRect(0, 0, c.width, c.height);
-  const cols = 3;
-  const rows = 7;
-  const padX = 4;
-  const padY = 4;
+  const cols = 3, rows = 7, padX = 4, padY = 4;
   const w = (c.width - padX * 2) / cols;
   const h = (c.height - padY * 2) / rows;
   for (let r = 0; r < rows; r++) {
     for (let cc = 0; cc < cols; cc++) {
       const lit = Math.random() < 0.4;
-      const x = padX + cc * w + 1;
-      const y = padY + r * h + 1;
-      const ww = w - 2;
-      const hh = h - 2;
       ctx.fillStyle = lit ? (Math.random() < 0.5 ? '#F0CB55' : '#5fa9c9') : '#0a1628';
-      ctx.fillRect(x, y, ww, hh);
+      ctx.fillRect(padX + cc * w + 1, padY + r * h + 1, w - 2, h - 2);
     }
   }
   const tex = new THREE.CanvasTexture(c);
@@ -137,12 +119,8 @@ const WINDOW_TEXTURE = (() => {
 })();
 
 const SKYLINE = (() => {
-  const buildings: { x: number; z: number; w: number; d: number; h: number; tone: number }[] = [];
   const seeds: { x: number; z: number; w: number; d: number; h: number; tone: number }[] = [];
-  const cols = 4;
-  const rows = 2;
-  const stepX = 1.6;
-  const stepZ = 1.6;
+  const cols = 4, rows = 2, stepX = 1.6, stepZ = 1.6;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       const cx = (c - (cols - 1) / 2) * stepX + (Math.random() - 0.5) * 0.2;
@@ -157,59 +135,32 @@ const SKYLINE = (() => {
   return seeds;
 })();
 
-function CityBackdrop() {
+function MapBase() {
+  const tex = useLoader(THREE.TextureLoader, '/ankara-map.png');
   return (
-    <group>
-      {SKYLINE.map((b, i) => {
-        const repeats = { u: Math.max(1, Math.round(b.w * 1.6)), v: Math.max(1, Math.round(b.h * 0.9)) };
-        const tex = WINDOW_TEXTURE.clone();
-        tex.needsUpdate = true;
-        tex.repeat.set(repeats.u, repeats.v);
-        return (
-          <mesh key={i} position={[b.x, b.h / 2 + 0.05, b.z]} castShadow>
-            <boxGeometry args={[b.w, b.h, b.d]} />
-            <meshStandardMaterial
-              map={tex}
-              color={new THREE.Color('#0c1626').multiplyScalar(b.tone)}
-              emissive="#1a2840"
-              emissiveIntensity={0.18}
-              metalness={0.5}
-              roughness={0.55}
-            />
-          </mesh>
-        );
-      })}
-    </group>
+    <mesh receiveShadow rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+      <planeGeometry args={[PLANE_HALF * 2, PLANE_HALF * 2]} />
+      <meshStandardMaterial map={tex} roughness={0.85} metalness={0.05} />
+    </mesh>
   );
 }
 
-function TopoMap() {
-  const geom = useMemo(() => {
-    const g = new THREE.PlaneGeometry(34, 30, 96, 80);
-    g.rotateX(-Math.PI / 2);
-    const pos = g.attributes.position;
-    const colors: number[] = [];
-    for (let i = 0; i < pos.count; i++) {
-      const x = pos.getX(i);
-      const z = pos.getZ(i);
-      const h = noise2D(x, z) * 0.8;
-      pos.setY(i, h);
-
-      const region = nearestRegion(x, z);
-      const base = REGION_TONES[region] || REGION_TONES.cankaya;
-      const elevFactor = 0.85 + Math.max(0, h) * 0.22;
-      const c = base.clone().multiplyScalar(elevFactor);
-      colors.push(c.r, c.g, c.b);
-    }
-    g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
-    g.computeVertexNormals();
+function MapBorder() {
+  const verts = useMemo(() => {
+    const v: number[] = [];
+    const h = PLANE_HALF;
+    v.push(-h, 0.02, -h,  h, 0.02, -h);
+    v.push( h, 0.02, -h,  h, 0.02,  h);
+    v.push( h, 0.02,  h, -h, 0.02,  h);
+    v.push(-h, 0.02,  h, -h, 0.02, -h);
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
     return g;
   }, []);
-
   return (
-    <mesh receiveShadow geometry={geom}>
-      <meshStandardMaterial vertexColors roughness={0.92} metalness={0.08} />
-    </mesh>
+    <lineSegments geometry={verts}>
+      <lineBasicMaterial color="#D4A82B" transparent opacity={0.6} />
+    </lineSegments>
   );
 }
 
@@ -217,22 +168,20 @@ function ContourLines() {
   const ref = useRef<THREE.LineSegments>(null);
   const geom = useMemo(() => {
     const verts: number[] = [];
-    const step = 0.5;
-    const half = 15;
-    const levels = [-0.4, 0.0, 0.4];
+    const step = 0.5, half = PLANE_HALF, levels = [-0.3, 0.0, 0.3];
     for (const level of levels) {
       for (let i = -half; i < half; i += step) {
         for (let j = -half; j < half; j += step) {
-          const h1 = noise2D(i, j) * 0.8;
-          const h2 = noise2D(i + step, j) * 0.8;
+          const h1 = noise2D(i, j);
+          const h2 = noise2D(i + step, j);
           if ((h1 - level) * (h2 - level) < 0) {
             const t = (level - h1) / (h2 - h1);
-            verts.push(i + t * step, 0.02, j, i + t * step + 0.01, 0.02, j);
+            verts.push(i + t * step, 0.03, j, i + t * step + 0.01, 0.03, j);
           }
-          const h3 = noise2D(i, j + step) * 0.8;
+          const h3 = noise2D(i, j + step);
           if ((h1 - level) * (h3 - level) < 0) {
             const t = (level - h1) / (h3 - h1);
-            verts.push(i, 0.02, j + t * step, i, 0.02, j + t * step + 0.01);
+            verts.push(i, 0.03, j + t * step, i, 0.03, j + t * step + 0.01);
           }
         }
       }
@@ -245,12 +194,12 @@ function ContourLines() {
   useFrame(() => {
     if (!ref.current) return;
     const mat = ref.current.material as THREE.LineBasicMaterial;
-    mat.opacity = 0.12 + Math.sin(performance.now() * 0.0006) * 0.05;
+    mat.opacity = 0.1 + Math.sin(performance.now() * 0.0006) * 0.05;
   });
 
   return (
     <lineSegments ref={ref} geometry={geom}>
-      <lineBasicMaterial color="#D4A82B" transparent opacity={0.15} />
+      <lineBasicMaterial color="#D4A82B" transparent opacity={0.1} />
     </lineSegments>
   );
 }
@@ -264,13 +213,15 @@ function ListingMarker({
   hovered: boolean;
   onHover: (id: string | null) => void;
 }) {
-  const [cx, cz] = getRegionPos(listing.region);
+  const [cx, cz] = listing.lat != null && listing.lng != null
+    ? latLngToXZ(listing.lat, listing.lng)
+    : regionToXZ(listing.region);
   const h = hashId(listing.id);
-  const angle = (h % 360) * (Math.PI / 180);
-  const dist = ((h % 100) / 100) * 1.4 + 0.4;
-  const x = cx + Math.cos(angle) * dist;
-  const z = cz + Math.sin(angle) * dist;
-  const ground = 0.25 + noise2D(x, z) * 0.8;
+  const jitterAngle = (h % 360) * (Math.PI / 180);
+  const jitterDist = ((h % 100) / 100) * 0.7 + 0.2;
+  const x = cx + Math.cos(jitterAngle) * jitterDist;
+  const z = cz + Math.sin(jitterAngle) * jitterDist;
+  const ground = 0.18;
 
   const sizeScale = 0.55 + Math.min(listing.area_m2, 5000) / 5000 * 0.65;
   const color = STATUS_COLORS[listing.status] || STATUS_COLORS.available;
@@ -283,7 +234,7 @@ function ListingMarker({
   const shape = useMemo(() => generateParcelShape(listing.id, 1.0), [listing.id]);
   const extrudeSettings = useMemo(
     () => ({
-      depth: 0.35 + (listing.area_m2 / 5000) * 0.4,
+      depth: 0.4 + (listing.area_m2 / 5000) * 0.4,
       bevelEnabled: true,
       bevelSegments: 1,
       bevelSize: 0.04,
@@ -330,12 +281,7 @@ function ListingMarker({
         window.location.href = `/arsalar/${listing.slug}`;
       }}
     >
-      <mesh
-        ref={meshRef}
-        rotation={[-Math.PI / 2, 0, 0]}
-        scale={[sizeScale, sizeScale, 1]}
-        castShadow
-      >
+      <mesh ref={meshRef} rotation={[-Math.PI / 2, 0, 0]} scale={[sizeScale, sizeScale, 1]} castShadow>
         <extrudeGeometry args={[shape, extrudeSettings]} />
         <meshStandardMaterial
           color={color}
@@ -352,13 +298,7 @@ function ListingMarker({
       </mesh>
 
       {hovered && (
-        <Html
-          position={[0, 0.95, 0]}
-          center
-          distanceFactor={10}
-          zIndexRange={[100, 0]}
-          style={{ pointerEvents: 'auto' }}
-        >
+        <Html position={[0, 0.95, 0]} center distanceFactor={10} zIndexRange={[100, 0]} style={{ pointerEvents: 'auto' }}>
           <div className="w-60 overflow-hidden rounded-lg border border-accent/40 bg-background/95 shadow-2xl shadow-accent/30 backdrop-blur-md">
             {photoUrl ? (
               <img src={photoUrl} alt="" className="h-28 w-full object-cover" loading="lazy" />
@@ -397,13 +337,21 @@ function ListingMarker({
   );
 }
 
-function RegionLabels({ listings }: { listings: Listing[] }) {
-  const regionsShown = useMemo(() => {
+function RegionLabels({
+  listings,
+  selected,
+  onSelect,
+}: {
+  listings: Listing[];
+  selected: string | null;
+  onSelect: (slug: string | null) => void;
+}) {
+  const groups = useMemo(() => {
     const map = new Map<string, [number, number, number]>();
     for (const l of listings) {
       const slug = (l.region || '').toLowerCase();
       if (!map.has(slug)) {
-        const [x, z] = getRegionPos(slug);
+        const [x, z] = regionToXZ(slug);
         map.set(slug, [x, z, 1]);
       } else {
         const cur = map.get(slug)!;
@@ -415,20 +363,34 @@ function RegionLabels({ listings }: { listings: Listing[] }) {
 
   return (
     <>
-      {regionsShown.map(([slug, [x, z, count]]) => {
-        const h = noise2D(x, z) * 0.8;
+      {groups.map(([slug, [x, z, count]]) => {
+        const isSelected = selected === slug;
         return (
           <Html
             key={slug}
-            position={[x, h + 2.2, z]}
+            position={[x, 1.8, z]}
             center
-            distanceFactor={14}
-            zIndexRange={[50, 0]}
-            style={{ pointerEvents: 'none' }}
+            distanceFactor={12}
+            zIndexRange={[60, 0]}
           >
-            <div className="rounded-md border border-white/10 bg-background/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent/80 backdrop-blur-sm">
-              {slug} · {count}
-            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelect(isSelected ? null : slug);
+              }}
+              className={`pointer-events-auto group flex flex-col items-center gap-1 rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold uppercase tracking-wider backdrop-blur-md transition-all ${
+                isSelected
+                  ? 'border-accent bg-accent/20 text-accent shadow-lg shadow-accent/30'
+                  : 'border-white/10 bg-background/70 text-accent/80 hover:border-accent/40 hover:bg-background/90'
+              }`}
+            >
+              <span>{slug}</span>
+              {count >= 3 && (
+                <span className="rounded-full bg-accent px-1.5 text-[9px] text-accent-foreground">
+                  {count}
+                </span>
+              )}
+            </button>
           </Html>
         );
       })}
@@ -436,22 +398,30 @@ function RegionLabels({ listings }: { listings: Listing[] }) {
   );
 }
 
-function SlowCamera() {
-  const { camera } = useThree();
-  const ref = useRef({ angle: 0.6, radius: 22, height: 14 });
-
-  useFrame((_, dt) => {
-    ref.current.angle += dt * 0.018;
-    const { angle, radius, height } = ref.current;
-    const targetX = Math.cos(angle) * radius;
-    const targetZ = Math.sin(angle) * radius;
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 0.6, dt);
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 0.6, dt);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, height, 0.6, dt);
-    camera.lookAt(0, 0, -2);
-  });
-
-  return null;
+function CityBackdrop() {
+  return (
+    <group>
+      {SKYLINE.map((b, i) => {
+        const repeats = { u: Math.max(1, Math.round(b.w * 1.6)), v: Math.max(1, Math.round(b.h * 0.9)) };
+        const tex = WINDOW_TEXTURE.clone();
+        tex.needsUpdate = true;
+        tex.repeat.set(repeats.u, repeats.v);
+        return (
+          <mesh key={i} position={[b.x, b.h / 2 + 0.05, b.z]} castShadow>
+            <boxGeometry args={[b.w, b.h, b.d]} />
+            <meshStandardMaterial
+              map={tex}
+              color={new THREE.Color('#0c1626').multiplyScalar(b.tone)}
+              emissive="#1a2840"
+              emissiveIntensity={0.18}
+              metalness={0.5}
+              roughness={0.55}
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
 }
 
 function GoldParticles() {
@@ -489,7 +459,41 @@ function GoldParticles() {
   );
 }
 
-function Legend({ listings }: { listings: Listing[] }) {
+function CameraFocus({ focusedRegion }: { focusedRegion: string | null }) {
+  const controls = useThree((s) => s.controls) as any;
+  const targetPos = useRef(new THREE.Vector3(0, 0, 0));
+
+  useEffect(() => {
+    if (focusedRegion) {
+      const [x, z] = regionToXZ(focusedRegion);
+      targetPos.current.set(x, 0, z);
+    } else {
+      targetPos.current.set(0, 0, 0);
+    }
+  }, [focusedRegion]);
+
+  useFrame((_, dt) => {
+    if (controls && focusedRegion) {
+      controls.target.lerp(targetPos.current, Math.min(dt * 2.5, 1));
+    }
+  });
+
+  return null;
+}
+
+function CameraTracker({ onUpdate }: { onUpdate: (x: number, z: number) => void }) {
+  const { camera } = useThree();
+  useFrame(() => {
+    onUpdate(camera.position.x, camera.position.z);
+  });
+  return null;
+}
+
+function Legend({ listings, selectedRegion, onSelectRegion }: {
+  listings: Listing[];
+  selectedRegion: string | null;
+  onSelectRegion: (slug: string | null) => void;
+}) {
   const regionCount = useMemo(
     () => new Set(listings.map((l) => l.region.toLowerCase())).size,
     [listings]
@@ -501,10 +505,7 @@ function Legend({ listings }: { listings: Listing[] }) {
       <div className="mt-2 space-y-1.5">
         {(Object.keys(STATUS_COLORS) as Array<keyof typeof STATUS_COLORS>).map((k) => (
           <div key={k} className="flex items-center gap-2 text-xs text-foreground/85">
-            <span
-              className="h-3 w-3 rounded-sm shadow ring-1 ring-white/10"
-              style={{ background: STATUS_COLORS[k] }}
-            />
+            <span className="h-3 w-3 rounded-sm shadow ring-1 ring-white/10" style={{ background: STATUS_COLORS[k] }} />
             {STATUS_LABELS[k]}
           </div>
         ))}
@@ -512,11 +513,63 @@ function Legend({ listings }: { listings: Listing[] }) {
       <div className="mt-3 border-t border-white/10 pt-2 text-[10px] text-muted-foreground">
         {listings.length} parsel · {regionCount} bölge
       </div>
+      <button
+        onClick={() => onSelectRegion(null)}
+        className={`pointer-events-auto mt-2 w-full rounded border px-2 py-1 text-[10px] font-semibold uppercase tracking-wider transition-all ${
+          selectedRegion
+            ? 'border-accent bg-accent/15 text-accent'
+            : 'border-white/10 bg-white/[0.04] text-muted-foreground opacity-50'
+        }`}
+        disabled={!selectedRegion}
+      >
+        {selectedRegion ? `✓ ${selectedRegion} seçili · Sıfırla` : 'Tüm haritayı göster'}
+      </button>
     </div>
   );
 }
 
-function HeroScene({ listings }: { listings: Listing[] }) {
+function MiniMap({ camX, camZ }: { camX: number; camZ: number }) {
+  return (
+    <div className="pointer-events-none absolute bottom-6 left-6 z-10 overflow-hidden rounded-lg border border-white/10 bg-background/80 backdrop-blur-md">
+      <div
+        className="h-32 w-32 bg-cover bg-center opacity-90"
+        style={{ backgroundImage: 'url(/ankara-map.png)' }}
+      />
+      <div className="absolute inset-0 border-2 border-accent/40 rounded-lg" />
+      <div
+        className="absolute h-2 w-2 rounded-full bg-accent shadow-lg shadow-accent/60 ring-2 ring-background"
+        style={{
+          left: `${50 + (camX / (PLANE_HALF * 2)) * 100}%`,
+          top: `${50 + (camZ / (PLANE_HALF * 2)) * 100}%`,
+          transform: 'translate(-50%, -50%)',
+        }}
+      />
+      <div className="absolute bottom-0 left-0 right-0 bg-background/85 px-2 py-1 text-center text-[9px] font-semibold uppercase tracking-wider text-accent">
+        Konum
+      </div>
+    </div>
+  );
+}
+
+function Attribution() {
+  return (
+    <div className="pointer-events-none absolute bottom-1 left-1/2 z-10 -translate-x-1/2 rounded bg-background/70 px-2 py-0.5 text-[9px] text-muted-foreground backdrop-blur-sm">
+      © OpenStreetMap contributors
+    </div>
+  );
+}
+
+function HeroScene({
+  listings,
+  focusedRegion,
+  onSelectRegion,
+  onCameraUpdate,
+}: {
+  listings: Listing[];
+  focusedRegion: string | null;
+  onSelectRegion: (slug: string | null) => void;
+  onCameraUpdate: (x: number, z: number) => void;
+}) {
   const [hovered, setHovered] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -530,14 +583,9 @@ function HeroScene({ listings }: { listings: Listing[] }) {
   if (isMobile) {
     return (
       <div className="absolute inset-0 overflow-hidden">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(ellipse at 30% 40%, rgba(212,168,43,0.18), transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(20,30,60,0.6), transparent 50%), linear-gradient(180deg, #0a1628 0%, #051020 100%)',
-          }}
-        />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjAuNSIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjAzIi8+PC9zdmc+')] opacity-50" />
+        <div className="absolute inset-0" style={{
+          background: 'radial-gradient(ellipse at 30% 40%, rgba(212,168,43,0.18), transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(20,30,60,0.6), transparent 50%), linear-gradient(180deg, #0a1628 0%, #051020 100%)',
+        }} />
       </div>
     );
   }
@@ -547,23 +595,34 @@ function HeroScene({ listings }: { listings: Listing[] }) {
       shadows
       dpr={[1, 2]}
       gl={{ antialias: true, alpha: true, powerPreference: 'high-performance' }}
-      onCreated={({ gl }) => {
-        gl.setClearColor(new THREE.Color('#040a14'), 1);
-      }}
+      onCreated={({ gl }) => { gl.setClearColor(new THREE.Color('#040a14'), 1); }}
     >
-      <PerspectiveCamera makeDefault fov={50} position={[18, 14, 18]} />
-      <SlowCamera />
+      <PerspectiveCamera makeDefault fov={50} position={[0, 22, 22]} />
+      <OrbitControls
+        enablePan={false}
+        minDistance={10}
+        maxDistance={45}
+        minPolarAngle={Math.PI / 6}
+        maxPolarAngle={Math.PI / 2.3}
+        autoRotate={!focusedRegion}
+        autoRotateSpeed={0.25}
+        enableDamping
+        dampingFactor={0.08}
+        target={[0, 0, 0]}
+      />
+      <CameraFocus focusedRegion={focusedRegion} />
+      <CameraTracker onUpdate={onCameraUpdate} />
 
-      <fog attach="fog" args={['#040a14', 18, 38]} />
+      <fog attach="fog" args={['#040a14', 22, 50]} />
 
-      <ambientLight intensity={0.4} color="#3a4a6a" />
-      <directionalLight position={[10, 14, 6]} intensity={1.0} color="#ffe8b8" castShadow shadow-mapSize={[1024, 1024]} />
-      <pointLight position={[-6, 4, -6]} intensity={0.5} color="#D4A82B" />
-      <pointLight position={[6, 3, 6]} intensity={0.4} color="#F0CB55" />
+      <ambientLight intensity={0.55} color="#ffffff" />
+      <directionalLight position={[10, 18, 8]} intensity={0.9} color="#ffe8b8" castShadow shadow-mapSize={[1024, 1024]} />
+      <pointLight position={[-6, 6, -6]} intensity={0.4} color="#D4A82B" />
 
       <GoldParticles />
 
-      <TopoMap />
+      <MapBase />
+      <MapBorder />
       <ContourLines />
       <CityBackdrop />
 
@@ -571,11 +630,11 @@ function HeroScene({ listings }: { listings: Listing[] }) {
         <ListingMarker key={l.id} listing={l} hovered={hovered === l.id} onHover={setHovered} />
       ))}
 
-      <RegionLabels listings={listings} />
+      <RegionLabels listings={listings} selected={focusedRegion} onSelect={onSelectRegion} />
 
       <EffectComposer multisampling={0}>
-        <Bloom intensity={0.6} luminanceThreshold={0.5} luminanceSmoothing={0.5} mipmapBlur />
-        <Vignette eskil={false} offset={0.15} darkness={0.6} />
+        <Bloom intensity={0.5} luminanceThreshold={0.6} luminanceSmoothing={0.5} mipmapBlur />
+        <Vignette eskil={false} offset={0.15} darkness={0.55} />
       </EffectComposer>
     </Canvas>
   );
@@ -583,6 +642,9 @@ function HeroScene({ listings }: { listings: Listing[] }) {
 
 export function Hero3D() {
   const [listings, setListings] = useState<Listing[]>([]);
+  const [focusedRegion, setFocusedRegion] = useState<string | null>(null);
+  const [camPos, setCamPos] = useState({ x: 0, z: 0 });
+  const onCameraUpdate = useCallback((x: number, z: number) => setCamPos({ x, z }), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -596,10 +658,25 @@ export function Hero3D() {
   return (
     <section className="relative h-screen w-full overflow-hidden">
       <div className="absolute inset-0">
-        <HeroScene listings={listings} />
+        <HeroScene
+          listings={listings}
+          focusedRegion={focusedRegion}
+          onSelectRegion={setFocusedRegion}
+          onCameraUpdate={onCameraUpdate}
+        />
       </div>
 
-      {listings.length > 0 && <Legend listings={listings} />}
+      {listings.length > 0 && (
+        <>
+          <Legend
+            listings={listings}
+            selectedRegion={focusedRegion}
+            onSelectRegion={setFocusedRegion}
+          />
+          <MiniMap camX={camPos.x} camZ={camPos.z} />
+          <Attribution />
+        </>
+      )}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex items-center">
         <div className="container-wide">
@@ -644,20 +721,6 @@ export function Hero3D() {
               >
                 Ücretsiz Danışmanlık
               </a>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1, delay: 1 }}
-              className="mt-16 flex items-center gap-8 text-xs text-muted-foreground"
-            >
-              <div className="flex items-center gap-2">
-                <div className="h-1 w-8 bg-gradient-to-r from-accent to-transparent" />
-                15+ Yıl
-              </div>
-              <div>₺850M+ İşlem Hacmi</div>
-              <div className="hidden sm:block">1.200+ Mutlu Müşteri</div>
             </motion.div>
           </motion.div>
         </div>
