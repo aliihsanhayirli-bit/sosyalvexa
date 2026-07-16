@@ -105,6 +105,93 @@ function generateParcelShape(id: string, baseR: number): THREE.Shape {
   return shape;
 }
 
+const WINDOW_TEXTURE = (() => {
+  const c = document.createElement('canvas');
+  c.width = 64;
+  c.height = 128;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#0a1628';
+  ctx.fillRect(0, 0, c.width, c.height);
+  const cols = 3;
+  const rows = 7;
+  const padX = 4;
+  const padY = 4;
+  const w = (c.width - padX * 2) / cols;
+  const h = (c.height - padY * 2) / rows;
+  for (let r = 0; r < rows; r++) {
+    for (let cc = 0; cc < cols; cc++) {
+      const lit = Math.random() < 0.4;
+      const x = padX + cc * w + 1;
+      const y = padY + r * h + 1;
+      const ww = w - 2;
+      const hh = h - 2;
+      ctx.fillStyle = lit ? (Math.random() < 0.5 ? '#F0CB55' : '#5fa9c9') : '#0a1628';
+      ctx.fillRect(x, y, ww, hh);
+    }
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+})();
+
+const SKYLINE = (() => {
+  const buildings: { x: number; z: number; w: number; d: number; h: number; tone: number }[] = [];
+  const seeds: { x: number; z: number; w: number; d: number; h: number; tone: number }[] = [];
+  const cols = 4;
+  const rows = 2;
+  const stepX = 1.6;
+  const stepZ = 1.6;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = (c - (cols - 1) / 2) * stepX + (Math.random() - 0.5) * 0.2;
+      const cz = (r - (rows - 1) / 2) * stepZ + (Math.random() - 0.5) * 0.2;
+      const w = 0.55 + Math.random() * 0.4;
+      const d = 0.55 + Math.random() * 0.4;
+      const h = 1.5 + Math.random() * 3.2;
+      const tone = 0.6 + Math.random() * 0.3;
+      seeds.push({ x: cx, z: cz + 7, w, d, h, tone });
+    }
+  }
+  return seeds;
+})();
+
+function CityBackdrop() {
+  const sharedTex = useMemo(() => {
+    const t = WINDOW_TEXTURE.clone();
+    t.needsUpdate = true;
+    return t;
+  }, []);
+
+  return (
+    <group>
+      {SKYLINE.map((b, i) => {
+        const repeats = { u: Math.max(1, Math.round(b.w * 1.6)), v: Math.max(1, Math.round(b.h * 0.9)) };
+        const tex = useMemo(() => {
+          const t = sharedTex.clone();
+          t.needsUpdate = true;
+          t.repeat.set(repeats.u, repeats.v);
+          return t;
+        }, [repeats.u, repeats.v]);
+        return (
+          <mesh key={i} position={[b.x, b.h / 2 + 0.05, b.z]} castShadow>
+            <boxGeometry args={[b.w, b.h, b.d]} />
+            <meshStandardMaterial
+              map={tex}
+              color={new THREE.Color('#0c1626').multiplyScalar(b.tone)}
+              emissive="#1a2840"
+              emissiveIntensity={0.18}
+              metalness={0.5}
+              roughness={0.55}
+            />
+          </mesh>
+        );
+      })}
+    </group>
+  );
+}
+
 function TopoMap() {
   const geom = useMemo(() => {
     const g = new THREE.PlaneGeometry(34, 30, 96, 80);
@@ -487,6 +574,7 @@ function HeroScene({ listings }: { listings: Listing[] }) {
 
       <TopoMap />
       <ContourLines />
+      <CityBackdrop />
 
       {listings.map((l) => (
         <ListingMarker key={l.id} listing={l} hovered={hovered === l.id} onHover={setHovered} />
