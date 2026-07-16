@@ -279,9 +279,9 @@ function registerMiddleware(server) {
         cors(res);
         if (req.method === 'GET') {
           // Webhook verification
-          const mode = req.url.match(/[?&]hub_mode=([^&]+)/)?.[1];
-          const token = req.url.match(/[?&]hub_verify_token=([^&]+)/)?.[1];
-          const challenge = req.url.match(/[?&]hub_challenge=([^&]+)/)?.[1];
+          const mode = req.url.match(/[?&]hub\.mode=([^&]+)/)?.[1];
+          const token = req.url.match(/[?&]hub\.verify_token=([^&]+)/)?.[1];
+          const challenge = req.url.match(/[?&]hub\.challenge=([^&]+)/)?.[1];
 
           if (mode === 'subscribe' && token === (process.env.META_VERIFY_TOKEN || 'gyd-verify-token')) {
             return res.end(challenge);
