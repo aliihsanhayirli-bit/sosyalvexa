@@ -228,11 +228,11 @@ export default function Home() {
 
           <motion.div {...fadeIn} className="relative">
             <div className="absolute -inset-8 rounded-3xl bg-accent/10 blur-3xl" />
-            <div className="relative grid grid-cols-2 gap-4">
+            <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STATS.map((s, i) => (
                 <div
                   key={s.label}
-                  className={`rounded-xl border border-white/[0.08] bg-card/60 p-6 backdrop-blur-md ${i % 2 ? 'mt-8' : ''}`}
+                  className={`rounded-xl border border-white/[0.08] bg-card/60 p-6 backdrop-blur-md ${i % 2 ? 'sm:mt-8 lg:mt-0' : ''}`}
                 >
                   <div className="font-display text-4xl font-semibold gold-text">{s.value}</div>
                   <div className="mt-2 text-xs uppercase tracking-wider text-muted-foreground">{s.label}</div>

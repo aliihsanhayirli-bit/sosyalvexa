@@ -559,6 +559,116 @@ function Attribution() {
   );
 }
 
+function pinPos(l: Listing): { x: number; y: number } {
+  const [px, pz] = l.lat != null && l.lng != null
+    ? latLngToXZ(l.lat, l.lng)
+    : regionToXZ(l.region);
+  const h = hashId(l.id);
+  const jitterAngle = (h % 360) * (Math.PI / 180);
+  const jitterDist = ((h % 100) / 100) * 0.025 + 0.005;
+  const x = px + Math.cos(jitterAngle) * jitterDist;
+  const y = pz + Math.sin(jitterAngle) * jitterDist;
+  return {
+    x: 50 + (x / (PLANE_HALF * 2)) * 100,
+    y: 50 + (y / (PLANE_HALF * 2)) * 100,
+  };
+}
+
+function shortPrice(p: number): string {
+  if (p >= 1_000_000) return `${(p / 1_000_000).toFixed(p >= 10_000_000 ? 0 : 1)}M`;
+  if (p >= 1_000) return `${(p / 1_000).toFixed(0)}K`;
+  return `${p}`;
+}
+
+function MobileMap({ listings }: { listings: Listing[] }) {
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const active = activeId ? listings.find((l) => l.id === activeId) : null;
+
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[#0a1628]">
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(/ankara-map.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/85 via-background/40 to-background/85" />
+      <div className="absolute inset-0 bg-gradient-to-r from-background/70 via-transparent to-transparent" />
+
+      {listings.map((l) => {
+        const pos = pinPos(l);
+        const color = STATUS_COLORS[l.status] || STATUS_COLORS.available;
+        const isActive = activeId === l.id;
+        return (
+          <a
+            key={l.id}
+            href={`/arsalar/${l.slug}`}
+            onClick={(e) => {
+              e.preventDefault();
+              setActiveId(isActive ? null : l.id);
+            }}
+            className={`absolute flex h-7 w-7 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full text-[9px] font-bold text-white shadow-lg ring-2 ring-background transition-transform ${
+              isActive ? 'scale-125 z-30' : 'z-20'
+            } ${l.status === 'available' ? 'animate-pulse' : ''}`}
+            style={{ left: `${pos.x}%`, top: `${pos.y}%`, background: color }}
+            aria-label={`${l.region} — ${formatPrice(l.price, (l.currency as 'TRY' | 'USD') || 'TRY')}`}
+          >
+            {shortPrice(l.price)}
+          </a>
+        );
+      })}
+
+      {active && (
+        <div className="absolute inset-x-3 bottom-20 z-30 rounded-xl border border-accent/40 bg-background/95 p-3 shadow-2xl shadow-accent/30 backdrop-blur-md">
+          <div className="flex items-start gap-3">
+            <div
+              className="mt-1 h-3 w-3 shrink-0 rounded-full ring-2 ring-white/10"
+              style={{ background: STATUS_COLORS[active.status] }}
+            />
+            <div className="min-w-0 flex-1">
+              <div className="text-[10px] uppercase tracking-wider text-accent">
+                {active.region} · {STATUS_LABELS[active.status] || active.status}
+              </div>
+              <div className="mt-0.5 line-clamp-2 font-display text-sm font-semibold text-foreground">
+                {active.title}
+              </div>
+              <div className="mt-1 flex items-center justify-between">
+                <div>
+                  <div className="text-[10px] text-muted-foreground">{formatArea(active.area_m2)}</div>
+                  <div className="font-display text-base font-semibold text-foreground">
+                    {formatPrice(active.price, (active.currency as 'TRY' | 'USD') || 'TRY')}
+                  </div>
+                </div>
+                <Link
+                  to={`/arsalar/${active.slug}`}
+                  onClick={() => setActiveId(null)}
+                  className="rounded bg-accent px-3 py-1.5 text-[10px] font-semibold text-accent-foreground"
+                >
+                  Detay →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute right-3 top-20 z-10 rounded-lg border border-white/10 bg-background/80 p-2 backdrop-blur-md">
+        <div className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">Parsel</div>
+        <div className="mt-1 space-y-1">
+          {(Object.keys(STATUS_COLORS) as Array<keyof typeof STATUS_COLORS>).map((k) => (
+            <div key={k} className="flex items-center gap-1.5 text-[10px] text-foreground/80">
+              <span className="h-2.5 w-2.5 rounded-full ring-1 ring-white/10" style={{ background: STATUS_COLORS[k] }} />
+              {STATUS_LABELS[k]}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function HeroScene({
   listings,
   focusedRegion,
@@ -571,24 +681,6 @@ function HeroScene({
   onCameraUpdate: (x: number, z: number) => void;
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 768);
-    onResize();
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  if (isMobile) {
-    return (
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0" style={{
-          background: 'radial-gradient(ellipse at 30% 40%, rgba(212,168,43,0.18), transparent 60%), radial-gradient(ellipse at 70% 70%, rgba(20,30,60,0.6), transparent 50%), linear-gradient(180deg, #0a1628 0%, #051020 100%)',
-        }} />
-      </div>
-    );
-  }
 
   return (
     <Canvas
@@ -644,7 +736,15 @@ export function Hero3D() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [focusedRegion, setFocusedRegion] = useState<string | null>(null);
   const [camPos, setCamPos] = useState({ x: 0, z: 0 });
+  const [isMobile, setIsMobile] = useState(false);
   const onCameraUpdate = useCallback((x: number, z: number) => setCamPos({ x, z }), []);
+
+  useEffect(() => {
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -658,15 +758,19 @@ export function Hero3D() {
   return (
     <section className="relative h-screen w-full overflow-hidden">
       <div className="absolute inset-0">
-        <HeroScene
-          listings={listings}
-          focusedRegion={focusedRegion}
-          onSelectRegion={setFocusedRegion}
-          onCameraUpdate={onCameraUpdate}
-        />
+        {isMobile ? (
+          <MobileMap listings={listings} />
+        ) : (
+          <HeroScene
+            listings={listings}
+            focusedRegion={focusedRegion}
+            onSelectRegion={setFocusedRegion}
+            onCameraUpdate={onCameraUpdate}
+          />
+        )}
       </div>
 
-      {listings.length > 0 && (
+      {listings.length > 0 && !isMobile && (
         <>
           <Legend
             listings={listings}
@@ -676,6 +780,12 @@ export function Hero3D() {
           <MiniMap camX={camPos.x} camZ={camPos.z} />
           <Attribution />
         </>
+      )}
+
+      {isMobile && listings.length > 0 && (
+        <div className="pointer-events-none absolute bottom-2 left-1/2 z-10 -translate-x-1/2 rounded bg-background/70 px-2 py-0.5 text-[9px] text-muted-foreground backdrop-blur-sm">
+          © OpenStreetMap contributors
+        </div>
       )}
 
       <div className="pointer-events-none absolute inset-0 z-10 flex items-center">
