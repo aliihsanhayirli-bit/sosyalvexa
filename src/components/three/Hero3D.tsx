@@ -158,22 +158,13 @@ const SKYLINE = (() => {
 })();
 
 function CityBackdrop() {
-  const sharedTex = useMemo(() => {
-    const t = WINDOW_TEXTURE.clone();
-    t.needsUpdate = true;
-    return t;
-  }, []);
-
   return (
     <group>
       {SKYLINE.map((b, i) => {
         const repeats = { u: Math.max(1, Math.round(b.w * 1.6)), v: Math.max(1, Math.round(b.h * 0.9)) };
-        const tex = useMemo(() => {
-          const t = sharedTex.clone();
-          t.needsUpdate = true;
-          t.repeat.set(repeats.u, repeats.v);
-          return t;
-        }, [repeats.u, repeats.v]);
+        const tex = WINDOW_TEXTURE.clone();
+        tex.needsUpdate = true;
+        tex.repeat.set(repeats.u, repeats.v);
         return (
           <mesh key={i} position={[b.x, b.h / 2 + 0.05, b.z]} castShadow>
             <boxGeometry args={[b.w, b.h, b.d]} />
