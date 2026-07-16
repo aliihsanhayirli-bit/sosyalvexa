@@ -1,22 +1,22 @@
 # Kurulum Rehberi
 
-## 1. Yerel Geliştirme (Local)
+## 1. Yerel Geliştirme
 
 ### 1.1. Gereksinimler
 - Node.js ≥ 20 (`node --version`)
-- PocketBase binary (depoda mevcut, cross-platform için [release](https://github.com/pocketbase/pocketbase/releases))
+- PocketBase binary (depoda `backend/pocketbase` Linux binary mevcut, Windows için [release](https://github.com/pocketbase/pocketbase/releases))
 
 ### 1.2. Kurulum
 ```bash
-git clone <repo> yca
-cd yca
+git clone https://github.com/aliihsanhayirli-bit/gyd.git
+cd gyd
 npm install
 ```
 
 ### 1.3. İlk admin hesabı
 ```bash
 cd backend
-./pocketbase admin create admin@ycayatirim.com.tr "GüçlüŞifre2024!"
+./pocketbase admin create admin@gydgrup.com.tr "GucluSifre2026!"
 cd ..
 ```
 
@@ -26,105 +26,125 @@ cp .env.example .env
 # .env dosyasını düzenle
 ```
 
+`.env` anahtarları:
+
+| Anahtar | Zorunlu | Açıklama |
+|---|---|---|
+| `VITE_POCKETBASE_URL` | evet | PB REST adresi, dev: `http://127.0.0.1:8090` |
+| `VITE_GEMINI_API_KEY` | evet | https://aistudio.google.com/app/apikey |
+| `VITE_GEMINI_MODEL` | hayır | Varsayılan `gemini-1.5-flash` |
+| `VITE_WHATSAPP_NUMBER` | evet | `905324892567` (ülke kodu + numara, başında 0 yok) |
+| `VITE_SITE_URL` | evet | Dev: `http://localhost:5173` |
+| `GEMINI_API_KEY` | evet (server) | Vite plugin + PB hook için |
+| `GEMINI_MODEL` | hayır | Server-side model |
+| `META_VERIFY_TOKEN` | evet (WhatsApp) | `gyd-verify-token` |
+| `META_WA_TOKEN` | evet (WhatsApp) | Meta permanent token |
+| `META_WA_PHONE_ID` | evet (WhatsApp) | WABA phone number ID |
+| `META_PAGE_ACCESS_TOKEN` | Messenger/IG | Facebook page token |
+| `PB_ENCRYPTION_KEY` | evet (prod) | 32+ rastgele karakter |
+
+> **Önemli:** `GEMINI_API_KEY` ve Meta token'lar **VITE_** prefix'i olmadan ayrıca tanımlanmalı — Vite client bundle'a `VITE_` ile başlayanları gömer.
+
 ### 1.5. Başlat
 ```bash
-npm run dev:all
+npm run dev:all     # Vite (5173) + PocketBase (8090)
 ```
 
-- Site → http://localhost:5173
-- Admin → http://localhost:5173/admin
-- PB Admin UI → http://localhost:8090/_/
+veya ayrı terminaller:
+```bash
+npm run dev         # sadece Vite
+npm run pb          # sadece PocketBase
+```
+
+| Servis | URL |
+|---|---|
+| Site | http://localhost:5173 |
+| Admin | http://localhost:5173/admin |
+| PocketBase Admin UI | http://127.0.0.1:8090/_/ |
+| PocketBase REST | http://127.0.0.1:8090/api/ |
 
 ---
 
 ## 2. Production Yapılandırması
 
-`.env.production`:
-```env
-VITE_POCKETBASE_URL=https://api.ycayatirim.com.tr
-VITE_GEMINI_API_KEY=
-VITE_GEMINI_MODEL=gemini-1.5-flash
-VITE_SITE_URL=https://ycayatirim.com.tr
-```
+VPS'te `/opt/gyd-pocketbase/.env` ve `/opt/gyd-api/.env` ayrı tutulur. Detay: [DEPLOY.md](DEPLOY.md).
 
-> **Not:** Gemini API anahtarı **server-side** (PocketBase hook veya Vercel function) için ayrıca `GEMINI_API_KEY` (VITE_ olmadan) tanımlanmalıdır. Client'a API key sızmamalı.
-
----
-
-## 3. Veritabanı Kurulumu
-
-PocketBase ilk açılışta `pb_migrations/` klasöründeki tüm migration'ları otomatik çalıştırır.
-
-8 collection otomatik oluşur:
-
-| Collection | Amaç |
-|---|---|
-| `users` | PocketBase auth (admin/danışman) |
-| `listings` | Arsalar (fotoğraf, imar, tapu, fiyat, konum) |
-| `contacts` | CRM kişiler (alıcı/satıcı, durum, etiketler) |
-| `conversations` | Kanal bazlı sohbet threadleri |
-| `messages` | Mesajlar (bot/müşteri/danışman) |
-| `timeline_events` | CRM kronolojik olaylar |
-| `bot_documents` | RAG embedding'leri |
-| `bot_settings` | Bot system prompt singleton |
-| `contact_submissions` | Site formundan gelen mesajlar |
-
----
-
-## 4. Seed Verisi (Opsiyonel)
-
-Gerçek verileri admin panelden girebilirsiniz. Hızlı başlangıç için örnek veri:
-
-PocketBase UI'a gidin → `listings` collection → "New record" → Formu doldurun → "Create".
-
-Veya toplu seed için:
+`VITE_*` değişkenleri build anında bundle'a gömülür — production build öncesi güncellenmeli:
 ```bash
-# backend/seed/listings.json oluşturup aşağıdaki komutla içeri alın
-cd backend
-./pocketbase import --dir ./pb_data
+VITE_POCKETBASE_URL=https://www.gydgrup.com.tr \
+VITE_WHATSAPP_NUMBER=905324892567 \
+VITE_SITE_URL=https://www.gydgrup.com.tr \
+npm run build
 ```
 
 ---
 
-## 5. Sorun Giderme
+## 3. Veritabanı
+
+PocketBase ilk açılışta `backend/pb_migrations/` altındaki 12 migration'ı otomatik çalıştırır:
+
+| Migration | Koleksiyon |
+|---|---|
+| `1700000001` | `listings` |
+| `1700000002` | `contacts` |
+| `1700000003` | `conversations` |
+| `1700000004` | `messages` |
+| `1700000005` | `timeline_events` |
+| `1700000006` | `bot_documents` (RAG) |
+| `1700000007` | `bot_settings` (singleton) |
+| `1700000008` | `contact_submissions` (site formu) |
+| `1700000009` | `settings` (firma bilgileri) |
+| `1700000010` | `bot_documents` rule relax |
+| `1700000011` | Şirket vergi/vergi dairesi alanları |
+| `1700000012` | `regions` |
+
+---
+
+## 4. Sorun Giderme
 
 ### PocketBase başlamıyor
-- Port 8090 kullanımda mı? `netstat -an | findstr 8090` ile kontrol edin.
-- `backend/pb_data/data.db` bozulmuş olabilir. Silip yeniden başlatın (tüm verileri siler).
+- Port 8090 kullanımda mı? `sudo lsof -i :8090`
+- `backend/pb_data/data.db` bozulmuşsa yedekten dön (bkz. [DEPLOY.md](DEPLOY.md) yedekleme bölümü)
 
 ### CORS hatası
-PocketBase varsayılan olarak tüm origin'lere izin verir. Eğer sorun yaşarsanız `pb_hooks/` içine:
+PocketBase varsayılan olarak tüm origin'lere izin verir. Sıkı kurallar için `backend/pb_hooks/` içine:
 ```js
 onBeforeServe((e) => {
-  e.response.header().set('Access-Control-Allow-Origin', '*');
+  e.response.header().set('Access-Control-Allow-Origin', 'https://www.gydgrup.com.tr');
 }, null);
 ```
 
 ### 3D sahne düşük FPS
-- Mobil cihazda otomatik fallback (parallax gradient)
-- Masaüstünde GPU acceleration kapalıysa (Chrome `chrome://flags`) etkinleştirin
-- Vite dev'de HMR sırasında FPS düşer, prod build daha iyi
+- Mobil cihazda otomatik parallax gradient fallback
+- Masaüstünde GPU acceleration kapalıysa Chrome `chrome://flags` içinden açın
+- Prod build dev'den daha iyi çalışır
 
 ### Gemini API 429
-Ücretsiz tier günde 1500 istek. Aşılırsa 24 saat bekleyin veya ücretli tier'a geçin.
+Ücretsiz tier **1500 istek/gün**. Aşılırsa 24 saat bekleyin veya ücretli tier'a geçin.
+
+### WhatsApp mesajı gelmiyor
+- `/api/webhook/meta` 200 dönüyor mu? `curl -X GET https://www.gydgrup.com.tr/api/webhook/meta?hub.mode=subscribe&hub.verify_token=gyd-verify-token&hub.challenge=ok`
+- PocketBase log: `sudo journalctl -u gyd-api -f`
 
 ---
 
-## 6. Yararlı Komutlar
+## 5. Yararlı Komutlar
 
 ```bash
-npm run dev          # Sadece Vite
-npm run dev:all      # PocketBase + Vite (önerilen)
-npm run build        # Production build
-npm run preview      # Build'i lokal serve
-npm run typecheck    # TypeScript kontrol
-```
+npm run dev              # Vite dev
+npm run dev:all          # Vite + PocketBase
+npm run build            # Prod build → dist/
+npm run build:check      # typecheck + build
+npm run build:staging    # Staging build (banner'lı)
+npm run typecheck        # TS strict
+npm run typecheck:all    # TS -b
+npm run deploy:prod      # build + rsync /var/www/gydgrup/dist/
+npm run deploy:staging   # scripts/deploy-staging.sh
 
-```bash
 # PocketBase
 cd backend
-./pocketbase serve                                    # Başlat
-./pocketbase admin create <email> <password>          # Admin oluştur
-./pocketbase admin update <email>                     # Şifre değiştir
-./pocketbase migrate                                  # Manuel migrate
+./pocketbase serve                                       # Başlat
+./pocketbase admin create <email> <password>             # Admin oluştur
+./pocketbase admin update <email>                        # Şifre değiştir
+./pocketbase migrate                                     # Manuel migrate
 ```

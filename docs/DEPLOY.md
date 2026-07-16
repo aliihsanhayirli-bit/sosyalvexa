@@ -1,195 +1,274 @@
 # Production Deploy
 
-## Mimari
+## Mimari (mevcut)
 
 ```
-┌────────────────────┐      ┌────────────────────┐
-│  Vercel (free)     │      │  Oracle Cloud Free │
-│  Vite + React SPA  │ ───> │  PocketBase + SSL  │
-│  https://ycayatirim│      │  https://api.yca...│
-└────────────────────┘      └────────────────────┘
-        │                            │
-        └──────┬─────────────────────┘
-               ▼
-        ┌────────────────────┐
-        │  Gemini API        │
-        │  (Google AI Studio)│
-        └────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│ VPS (Hetzner / Oracle Cloud Free Tier / herhangi bir Linux)  │
+│                                                              │
+│  ┌────────────────────┐   ┌────────────────────┐             │
+│  │ Nginx :443         │   │ Certbot            │             │
+│  │ www.gydgrup.com.tr │   │ Let's Encrypt      │             │
+│  └────────┬───────────┘   └────────────────────┘             │
+│           │                                                  │
+│  ┌────────┼─────────┬──────────────┬─────────────┐           │
+│  ▼        ▼         ▼              ▼             ▼           │
+│  /       /api/chat /api/rag/      /api/webhook/  /api/        │
+│  dist/  →8091      →8091          →8091          →8090        │
+│  (Vite) (gyd-api)  (gyd-api)      (gyd-api)      (PB)         │
+│                                                              │
+│  /gyd-staging/  → /var/www/gydgrup-staging/dist/            │
+└──────────────────────────────────────────────────────────────┘
+           │
+           ▼
+   ┌────────────────────┐
+   │ Google Gemini API  │
+   │ (text-embedding-   │
+   │  001 + Flash)      │
+   └────────────────────┘
 ```
+
+**Sürekli servisler (systemd):**
+- `gyd-pocketbase.service` → `/opt/gyd-pocketbase/pocketbase serve` (port 8090)
+- `gyd-api.service` → `/opt/gyd-api/server.mjs` (port 8091)
 
 ---
 
-## 1. PocketBase Sunucusu (Oracle Cloud Free Tier — Önerilen)
+## 1. İlk kurulum (sıfırdan)
 
-Oracle Cloud "Always Free" tier ömür boyu ücretsiz:
-- 4 vCPU, 24 GB RAM (AMD)
-- 200 GB storage
-- 10 TB egress/ay
-
-### 1.1. Oracle hesabı
-1. https://cloud.oracle.com ücretsiz hesap aç
-2. Ana sayfa → "Create a VM instance"
-3. Shape: `VM.Standard.E2.1.Micro` (AMD, ücretsiz) veya `VM.Standard.A1.Flex` (ARM, 4 OCPU/24GB, ücretsiz)
-4. OS: Ubuntu 22.04 (veya 24.04)
-5. SSH key'ini ekle, indir
-6. Public IP ata, 22/8090/80/443 portlarını aç
-
-### 1.2. Sunucu kurulumu
+### 1.1. Sunucu hazırlığı
 ```bash
-ssh ubuntu@<PUBLIC_IP>
+ssh root@<SUNUCU_IP>
+apt update && apt upgrade -y
+apt install -y nginx certbot python3-certbot-nginx ufw rsync
 
-sudo apt update && sudo apt upgrade -y
-sudo apt install -y nginx certbot python3-certbot-nginx ufw
+ufw allow 22/tcp
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw enable
+```
 
-# PocketBase (ARM veya AMD mimarisine göre)
+### 1.2. PocketBase
+```bash
+mkdir -p /opt/gyd-pocketbase
+cd /opt/gyd-pocketbase
 wget https://github.com/pocketbase/pocketbase/releases/download/v0.22.21/pocketbase_0.22.21_linux_amd64.zip
 unzip pocketbase_0.22.21_linux_amd64.zip
 chmod +x pocketbase
-sudo mv pocketbase /usr/local/bin/
 
-# Çalışma dizini
-sudo mkdir -p /opt/yca-pocketbase
-sudo chown ubuntu:ubuntu /opt/yca-pocketbase
-cd /opt/yca-pocketbase
+# Migration + hook'ları yükle
+scp -r backend/pb_migrations root@<IP>:/opt/gyd-pocketbase/
+scp -r backend/pb_hooks root@<IP>:/opt/gyd-pocketbase/
+```
 
-# Migration'ları yükle
-scp -r backend/pb_migrations ubuntu@<IP>:/opt/yca-pocketbase/
-scp -r backend/pb_hooks ubuntu@<IP>:/opt/yca-pocketbase/
+`.env` (sadece PB'nin görebildiği):
+```bash
+tee /opt/gyd-pocketbase/.env <<EOF
+PB_ENCRYPTION_KEY=$(openssl rand -hex 16)
+GEMINI_API_KEY=<gemini-api-key>
+META_VERIFY_TOKEN=gyd-verify-token
+EOF
+chmod 600 /opt/gyd-pocketbase/.env
+```
 
-# PocketBase systemd servisi
-sudo tee /etc/systemd/system/pocketbase.service > /dev/null <<EOF
+systemd unit:
+```ini
+# /etc/systemd/system/gyd-pocketbase.service
 [Unit]
-Description=PocketBase
+Description=GYD PocketBase
 After=network.target
 
 [Service]
 Type=simple
-User=ubuntu
-WorkingDirectory=/opt/yca-pocketbase
-ExecStart=/usr/local/bin/pocketbase serve --http=127.0.0.1:8090 --encryptionEnv=PB_ENCRYPTION_KEY
+User=root
+WorkingDirectory=/opt/gyd-pocketbase
+ExecStart=/opt/gyd-pocketbase/pocketbase serve --http=127.0.0.1:8090 --encryptionEnv=PB_ENCRYPTION_KEY
+EnvironmentFile=/opt/gyd-pocketbase/.env
 Restart=always
 RestartSec=5
-Environment=PB_ENCRYPTION_KEY=<32 karakterlik rastgele key>
 
 [Install]
 WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now pocketbase
-sudo systemctl status pocketbase
 ```
 
-### 1.3. Nginx reverse proxy + SSL
 ```bash
-sudo tee /etc/nginx/sites-available/pocketbase > /dev/null <<EOF
-server {
-    listen 80;
-    server_name api.ycayatirim.com.tr;
-
-    client_max_body_size 50M;
-
-    location / {
-        proxy_pass http://127.0.0.1:8090;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-    }
-}
-EOF
-
-sudo ln -s /etc/nginx/sites-available/pocketbase /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
-
-# SSL
-sudo certbot --nginx -d api.ycayatirim.com.tr
+systemctl daemon-reload
+systemctl enable --now gyd-pocketbase
+systemctl status gyd-pocketbase
 ```
 
-### 1.4. Firewall
+### 1.3. API server (chat / RAG / webhook)
 ```bash
-sudo ufw allow 22/tcp
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw enable
+mkdir -p /opt/gyd-api
+scp -r vite/api-plugin.js root@<IP>:/opt/gyd-api/   # şablon olarak
+# server.mjs'i repodan al
 ```
 
-### 1.5. İlk admin
+`/opt/gyd-api/.env`:
 ```bash
-cd /opt/yca-pocketbase
-pocketbase admin create admin@ycayatirim.com.tr "GucluSifre2024!"
+PORT=8091
+HOST=127.0.0.1
+VITE_POCKETBASE_URL=http://127.0.0.1:8090
+GEMINI_API_KEY=<gemini-api-key>
+GEMINI_MODEL=gemini-1.5-flash
+META_VERIFY_TOKEN=gyd-verify-token
+META_APP_ID=1721626692079061
+META_APP_SECRET=<meta-app-secret>
+META_WA_PHONE_ID=<phone-number-id>
+META_WA_TOKEN=<permanent-system-user-token>
+META_PAGE_ACCESS_TOKEN=<fb-page-token>
+```
+
+systemd unit:
+```ini
+# /etc/systemd/system/gyd-api.service
+[Unit]
+Description=GYD API server
+After=network.target gyd-pocketbase.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/gyd-api
+ExecStart=/usr/bin/node /opt/gyd-api/server.mjs
+EnvironmentFile=/opt/gyd-api/.env
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+systemctl daemon-reload
+systemctl enable --now gyd-api
+systemctl status gyd-api
+```
+
+### 1.4. Frontend build & deploy
+```bash
+# Lokalde
+git clone https://github.com/aliihsanhayirli-bit/gyd.git
+cd gyd
+npm install
+
+VITE_POCKETBASE_URL=https://www.gydgrup.com.tr \
+VITE_WHATSAPP_NUMBER=905324892567 \
+VITE_SITE_URL=https://www.gydgrup.com.tr \
+npm run build
+
+# Sunucuya rsync
+rsync -a --delete dist/ root@<IP>:/var/www/gydgrup/dist/
+```
+
+veya repodaki script:
+```bash
+npm run deploy:prod    # build + rsync /var/www/gydgrup/dist/
+```
+
+### 1.5. Nginx + SSL
+Bkz. **[nginx-www.md](nginx-www.md)** (yoksa) veya `AGENTS.md` → "VPS hızlı referans".
+
+```bash
+# Site config
+ln -s /etc/nginx/sites-available/gydgrup /etc/nginx/sites-enabled/
+
+# SSL (Let's Encrypt — www otomatik eklenir)
+certbot --nginx -d gydgrup.com.tr -d www.gydgrup.com.tr
+
+nginx -t && systemctl reload nginx
 ```
 
 ---
 
-## 2. Frontend (Vercel — Ücretsiz)
+## 2. Deploy döngüsü (günlük)
 
-### 2.1. Repo hazırlığı
 ```bash
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin git@github.com:ycayatirim/yca-web.git
-git push -u origin main
+cd /root/gyd/gyd
+git pull
+npm install                # sadece package.json değiştiyse
+npm run typecheck          # hata varsa push etmeyin
+npm run build
+npm run deploy:prod
 ```
 
-### 2.2. Vercel'e bağla
-1. https://vercel.com → "New Project"
-2. GitHub repo'yu seç
-3. Framework: **Vite**
-4. Build Command: `npm run build`
-5. Output Directory: `dist`
-6. **Environment Variables:**
-   - `VITE_POCKETBASE_URL` = `https://api.ycayatirim.com.tr`
-   - `VITE_GEMINI_API_KEY` = (boş, server-side kullanılacak)
-   - `VITE_GEMINI_MODEL` = `gemini-1.5-flash`
-   - `VITE_SITE_URL` = `https://ycayatirim.com.tr`
-7. Deploy
+Migration değiştiyse:
+```bash
+scp -r backend/pb_migrations/* root@<IP>:/opt/gyd-pocketbase/pb_migrations/
+ssh root@<IP> "systemctl restart gyd-pocketbase"
+```
 
-### 2.3. Domain bağla
-Vercel → Project → Settings → Domains → `ycayatirim.com.tr` ekle.
-DNS'te CNAME `ycayatirim.com.tr` → `cname.vercel-dns.com`
+API değiştiyse:
+```bash
+scp vite/api-plugin.js root@<IP>:/opt/gyd-api/server.mjs
+ssh root@<IP> "systemctl restart gyd-api"
+```
 
 ---
 
-## 3. Gemini API Anahtarı (Server-side)
+## 3. Domain & SSL
 
-Üretimde API key **client bundle'a sızmamalı**. PocketBase tarafında kullanmak için:
-
-1. Google AI Studio'dan key al: https://aistudio.google.com/app/apikey
-2. PocketBase sunucusunda `.env`:
-```bash
-echo "GEMINI_API_KEY=AIza..." | sudo tee /etc/default/pocketbase
-```
-3. `pocketbase.service`'i güncelle (`EnvironmentFile=/etc/default/pocketbase` ekle)
-4. Veya PocketBase hook'unda direkt `process.env.GEMINI_API_KEY` oku (Bkz. `pb_hooks/chat-bot.pb.js`)
+- Domain: `gydgrup.com.tr` — DNS A kaydı VPS IP'sine
+- Canonical: **www.gydgrup.com.tr** (gydgrup.com.tr 301 → www)
+- SSL: Let's Encrypt ECDSA, otomatik yenileme (`certbot.timer`)
+- Sertifika `/etc/letsencrypt/live/gydgrup.com.tr/` altında
+- Yenileme kontrol: `certbot renew --dry-run`
 
 ---
 
-## 4. WhatsApp Cloud API (Webhook)
+## 4. WhatsApp Cloud API
 
-Bkz. **[META-SETUP.md](META-SETUP.md)** — Meta Business hesabı kurulumu.
+Bkz. **[META-SETUP.md](META-SETUP.md)**.
 
 ---
 
 ## 5. Yedekleme
 
-PocketBase SQLite otomatik yedeklenir. Ek olarak:
 ```bash
-# Cron: her gece 03:00'te yedekle
-0 3 * * * cp /opt/yca-pocketbase/pb_data/data.db /opt/yca-pocketbase/backups/data-$(date +\%Y\%m\%d).db
+# PocketBase SQLite — her gece 03:00
+sudo crontab -e
+0 3 * * * cp /opt/gyd-pocketbase/pb_data/data.db /opt/gyd-pocketbase/backups/data-$(date +\%Y\%m\%d).db && find /opt/gyd-pocketbase/backups/ -name "data-*.db" -mtime +30 -delete
+
+# Frontend dist (gerektiğinde)
+tar -czf /var/backups/gydgrup-dist-$(date +\%Y\%m\%d).tar.gz -C /var/www/gydgrup dist
 ```
 
 ---
 
-## 6. Maliyet Özeti
+## 6. Maliyet
 
-| Hizmet | Aylık |
+| Bileşen | Aylık |
 |---|---|
-| Oracle Cloud Free Tier | $0 |
-| Vercel | $0 |
-| Domain (yıllık) | ~₺600 |
+| VPS (Hetzner CX22 veya Oracle A1) | $0 (free tier) — ~$5 tier'lı |
+| Domain (.com.tr) | ~₺600/yıl |
 | SSL (Let's Encrypt) | $0 |
-| Gemini ücretsiz | $0 |
-| **Toplam** | **~₺50/ay** |
+| Gemini API (free tier) | $0 — 1500 istek/gün |
+| Meta WhatsApp (utility şablonlar) | ~₺0.15/mesaj |
+| **Toplam** | **~₺100-200/ay** (aktif kullanımda) |
+
+---
+
+## 7. Sorun Giderme
+
+### Site açılmıyor
+```bash
+systemctl status nginx
+systemctl status gyd-pocketbase
+systemctl status gyd-api
+journalctl -u gyd-api -n 50 --no-pager
+curl -i https://www.gydgrup.com.tr/api/health
+```
+
+### Migration çalışmadı
+```bash
+journalctl -u gyd-pocketbase -n 100 --no-pager | grep -i migrat
+# Manuel çalıştırma
+cd /opt/gyd-pocketbase
+./pocketbase migrate
+```
+
+### SSL yenilenmedi
+```bash
+certbot renew --dry-run
+certbot certificates
+```

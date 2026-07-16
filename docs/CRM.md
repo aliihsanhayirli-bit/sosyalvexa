@@ -1,8 +1,8 @@
 # CRM Kullanım Kılavuzu
 
-## Genel Bakış
+GYD CRM, **4 kanaldan** (Web, WhatsApp, Facebook Messenger, Instagram) gelen müşterileri tek yerde toplar. Alıcı/satıcı ayrımı, durum pipeline'ı ve tam konuşma geçmişi sunar.
 
-YCA CRM, **4 kanaldan** (Web, WhatsApp, Facebook, Instagram) gelen müşterileri tek bir yerde toplar. Alıcı/satıcı ayrımı, durum pipeline'ı ve tam konuşma geçmişi sunar.
+Şirket: **GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ.** · Telefon: **+90 532 489 25 67** · info@gydgrup.com.tr
 
 ---
 
@@ -33,7 +33,7 @@ YCA CRM, **4 kanaldan** (Web, WhatsApp, Facebook, Instagram) gelen müşterileri
 - Alıcı/Satıcı/Yatırımcı rozeti
 - Etiketler
 - Bütçe aralığı
-- Hızlı işlemler (Ara, WhatsApp, E-posta)
+- Hızlı işlemler: **Ara** · **WhatsApp** (`+90 532 489 25 67` template) · **E-posta**
 
 ### Sol Panel — Konuşma
 Tüm kanal mesajları kronolojik. Bot / Müşteri / Danışman renklerle ayrılır.
@@ -41,7 +41,7 @@ Tüm kanal mesajları kronolojik. Bot / Müşteri / Danışman renklerle ayrıl�
 **Mesaj gönder:**
 - Yaz + Enter veya gönder butonu
 - 📷 Konum fotoğrafı: buton → çoklu dosya seç → gönder
-- 📄 Arsa paylaş: ileride — seçili arsa kartını müşteriye linkle
+- 🏠 Arsa paylaşımı: listeden arsa seç → link WhatsApp'tan gönder
 
 ### Sağ Panel — Timeline
 Tüm olaylar kronolojik:
@@ -56,8 +56,8 @@ Tüm olaylar kronolojik:
 
 ## Lead Oluşturma (Otomatik)
 
-### Bot konuşmalarından
-1. Müşteri web chat'te "Arsa almak istiyorum" yazarsa
+### Web Chat'ten
+1. Müşteri sitede "Arsa almak istiyorum" yazar
 2. Bot ilk selamdan sonra `contacts` tablosuna yeni kayıt açar
 3. Tip (buyer/seller) intent'e göre
 4. Source: `web`
@@ -65,10 +65,13 @@ Tüm olaylar kronolojik:
 6. **Timeline'a "Kişi oluşturuldu" + "Müşteri mesajı" event'leri düşer** (PocketBase hook)
 
 ### WhatsApp'tan
-1. Müşteri `0545 655 10 70`'ye yazar
-2. Meta webhook → PocketBase
+1. Müşteri **+90 532 489 25 67**'ye yazar
+2. Meta webhook → `gyd-api` → PocketBase
 3. `external_id` (whatsapp ID) ile duplicate kontrol
 4. İlk mesajsa yeni contact, sonraki mesajlarda mevcut conversation'a ekle
+
+### Facebook / Instagram'dan
+Aynı akış, `source` alanı `messenger` veya `instagram`.
 
 ### İletişim formundan
 - `/iletisim` form submit → `contact_submissions` tablosu
@@ -84,13 +87,13 @@ Tüm olaylar kronolojik:
 - Açık konuşma
 - Dönüşüm oranı
 - Ziyaret/mesaj trendi (14 gün)
-- Kanal dağılımı (hangi kanal daha çok lead getiriyor)
+- Kanal dağılımı (web / whatsapp / messenger / instagram)
 - Pipeline bar chart (hangi aşamada kaç kişi var)
 - Son 5 lead listesi
 
 ---
 
-## Çoklu Danışman Kullanımı
+## Çoklu Danışman Kullanımü
 
 Her lead `assigned_to` alanı ile bir danışmana atanabilir:
 - Admin tüm lead'leri görür
@@ -104,7 +107,7 @@ Her lead `assigned_to` alanı ile bir danışmana atanabilir:
 - Tüm kişisel veriler PocketBase SQLite'ta
 - Log'lar 2 yıl saklanır
 - Müşteri "verilerimi sil" derse → admin panelden soft-delete
-- GDPR/KVKK uyumlu data export mümkün
+- KVKK uyumlu data export mümkün
 
 ---
 
