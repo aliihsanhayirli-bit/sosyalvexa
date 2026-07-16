@@ -21,8 +21,10 @@ export default function AdminLogin() {
       await pb.collection('users').authWithPassword(email, password);
       toast.success('Giriş başarılı');
       navigate('/admin');
-    } catch {
-      toast.error('Giriş başarısız. Bilgileri kontrol edin.');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[admin login] hata:', err);
+      toast.error(`Giriş başarısız: ${msg}`);
     } finally {
       setLoading(false);
     }
