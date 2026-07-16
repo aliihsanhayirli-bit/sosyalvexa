@@ -1,165 +1,199 @@
-import { useMemo, useRef, useState, useEffect } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Stars, Html, PerspectiveCamera } from '@react-three/drei';
+import { Html, PerspectiveCamera } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { motion } from 'framer-motion';
+import { pb } from '@/lib/pb';
+import { formatPrice, formatArea } from '@/lib/utils';
 
-type BuildingSeed = {
-  id: number;
-  x: number;
-  z: number;
-  w: number;
-  d: number;
-  h: number;
-  premium: boolean;
-  label: string;
-  price: string;
-  area: string;
+const STATUS_COLORS: Record<string, string> = {
+  available: '#10B981',
+  reserved: '#F59E0B',
+  sold: '#EF4444',
 };
 
-const CITY = (() => {
-  const seeds: BuildingSeed[] = [];
-  const cols = 6;
-  const rows = 4;
-  const stepX = 2.2;
-  const stepZ = 2.2;
-  const labels = [
-    { label: 'Çankaya', price: '₺3.4M', area: '1.420 m²' },
-    { label: 'Etimesgut', price: '₺2.1M', area: '980 m²' },
-    { label: 'Mamak', price: '₺1.6M', area: '820 m²' },
-    { label: 'Yenimahalle', price: '₺2.8M', area: '1.180 m²' },
-    { label: 'Keçiören', price: '₺1.9M', area: '940 m²' },
-    { label: 'Sincan', price: '₺1.4M', area: '720 m²' },
-    { label: 'Altındağ', price: '₺2.3M', area: '1.050 m²' },
-    { label: 'Pursaklar', price: '₺1.7M', area: '860 m²' },
-  ];
-  let id = 0;
-  for (let r = 0; r < rows; r++) {
-    for (let c = 0; c < cols; c++) {
-      if ((r === 1 && c === 2) || (r === 2 && c === 4)) continue;
-      const baseW = 0.8 + Math.sin(c * 1.3 + r * 0.7) * 0.3;
-      const baseD = 0.8 + Math.cos(c * 0.9 + r * 1.1) * 0.3;
-      const baseH = 1.2 + Math.abs(Math.sin(c * 0.6 + r * 1.7)) * 3.6;
-      const premium = (c + r) % 5 === 0 || (c * r) % 7 === 0;
-      const meta = labels[(c + r) % labels.length];
-      seeds.push({
-        id: id++,
-        x: (c - (cols - 1) / 2) * stepX + (Math.random() - 0.5) * 0.25,
-        z: (r - (rows - 1) / 2) * stepZ + (Math.random() - 0.5) * 0.25,
-        w: baseW,
-        d: baseD,
-        h: baseH,
-        premium,
-        label: meta.label,
-        price: meta.price,
-        area: meta.area,
-      });
-    }
-  }
-  return seeds;
-})();
+const REGION_POS: Record<string, [number, number]> = {
+  cankaya:    [ 0,  0],
+  altindag:   [ 0, -3],
+  yenimahalle: [ 2, -5],
+  kecioren:   [ 4, -4],
+  pursaklar:  [ 6, -5],
+  mamak:      [ 3,  0],
+  etimesgut:  [-4, -2],
+  sincan:     [-4, -5],
+  polatli:    [-8, -9],
+};
 
-const WINDOW_TEXTURE = (() => {
-  const c = document.createElement('canvas');
-  c.width = 128;
-  c.height = 256;
-  const ctx = c.getContext('2d')!;
-  ctx.fillStyle = '#08111f';
-  ctx.fillRect(0, 0, c.width, c.height);
-  const cols = 6;
-  const rows = 14;
-  const padX = 8;
-  const padY = 8;
-  const w = (c.width - padX * 2) / cols;
-  const h = (c.height - padY * 2) / rows;
-  for (let r = 0; r < rows; r++) {
-    for (let cc = 0; cc < cols; cc++) {
-      const lit = Math.random() < 0.55;
-      const warm = lit && Math.random() < 0.6;
-      const x = padX + cc * w + 2;
-      const y = padY + r * h + 2;
-      const ww = w - 4;
-      const hh = h - 4;
-      if (lit) {
-        ctx.fillStyle = warm ? '#F0CB55' : '#5fa9c9';
-      } else {
-        ctx.fillStyle = '#0a1628';
+interface Listing {
+  id: string;
+  collectionId: string;
+  slug: string;
+  title: string;
+  price: number;
+  currency: string;
+  area_m2: number;
+  region: string;
+  status: string;
+}
+
+function getRegionPos(slug?: string): [number, number] {
+  if (!slug) return [0, 0];
+  return REGION_POS[slug.toLowerCase()] || [0, 0];
+}
+
+function noise2D(x: number, z: number): number {
+  return (
+    Math.sin(x * 0.32) * 0.55 +
+    Math.cos(z * 0.41) * 0.35 +
+    Math.sin(x * 0.73 + z * 0.51) * 0.22 +
+    Math.cos(x * 1.21 - z * 0.83) * 0.16
+  );
+}
+
+function hashId(id: string): number {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) | 0;
+  return Math.abs(h);
+}
+
+function TopoMap() {
+  const geom = useMemo(() => {
+    const g = new THREE.PlaneGeometry(34, 30, 96, 80);
+    g.rotateX(-Math.PI / 2);
+    const pos = g.attributes.position;
+    const colors: number[] = [];
+    const low = new THREE.Color('#0a1830');
+    const mid = new THREE.Color('#1a2c4a');
+    const high = new THREE.Color('#2a4060');
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const z = pos.getZ(i);
+      const h = noise2D(x, z) * 0.8;
+      pos.setY(i, h);
+      const t = THREE.MathUtils.clamp((h + 0.8) / 1.6, 0, 1);
+      const c = t < 0.5
+        ? low.clone().lerp(mid, t * 2)
+        : mid.clone().lerp(high, (t - 0.5) * 2);
+      colors.push(c.r, c.g, c.b);
+    }
+    g.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+    g.computeVertexNormals();
+    return g;
+  }, []);
+
+  return (
+    <mesh receiveShadow geometry={geom}>
+      <meshStandardMaterial vertexColors roughness={0.92} metalness={0.08} />
+    </mesh>
+  );
+}
+
+function ContourLines() {
+  const ref = useRef<THREE.LineSegments>(null);
+  const geom = useMemo(() => {
+    const verts: number[] = [];
+    const step = 0.5;
+    const half = 15;
+    const levels = [-0.4, 0.0, 0.4];
+    for (const level of levels) {
+      for (let i = -half; i < half; i += step) {
+        for (let j = -half; j < half; j += step) {
+          const h1 = noise2D(i, j) * 0.8;
+          const h2 = noise2D(i + step, j) * 0.8;
+          if ((h1 - level) * (h2 - level) < 0) {
+            const t = (level - h1) / (h2 - h1);
+            verts.push(i + t * step, 0.02, j, i + t * step + 0.01, 0.02, j);
+          }
+          const h3 = noise2D(i, j + step) * 0.8;
+          if ((h1 - level) * (h3 - level) < 0) {
+            const t = (level - h1) / (h3 - h1);
+            verts.push(i, 0.02, j + t * step, i, 0.02, j + t * step + 0.01);
+          }
+        }
       }
-      ctx.fillRect(x, y, ww, hh);
     }
-  }
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = THREE.RepeatWrapping;
-  tex.wrapT = THREE.RepeatWrapping;
-  tex.colorSpace = THREE.SRGBColorSpace;
-  return tex;
-})();
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+    return g;
+  }, []);
 
-function Building({
-  id, x, z, w, d, h, premium, label, price, area, hovered, onHover,
-}: BuildingSeed & { hovered: boolean; onHover: (id: number | null) => void }) {
+  useFrame(() => {
+    if (!ref.current) return;
+    const mat = ref.current.material as THREE.LineBasicMaterial;
+    mat.opacity = 0.12 + Math.sin(performance.now() * 0.0006) * 0.05;
+  });
+
+  return (
+    <lineSegments ref={ref} geometry={geom}>
+      <lineBasicMaterial color="#D4A82B" transparent opacity={0.15} />
+    </lineSegments>
+  );
+}
+
+function ListingMarker({
+  listing,
+  hovered,
+  onHover,
+}: {
+  listing: Listing;
+  hovered: boolean;
+  onHover: (id: string | null) => void;
+}) {
+  const [cx, cz] = getRegionPos(listing.region);
+  const h = hashId(listing.id);
+  const angle = (h % 360) * (Math.PI / 180);
+  const dist = ((h % 100) / 100) * 1.4 + 0.4;
+  const x = cx + Math.cos(angle) * dist;
+  const z = cz + Math.sin(angle) * dist;
+  const ground = 0.25 + noise2D(x, z) * 0.8;
+
+  const size = 0.28 + Math.min(listing.area_m2, 5000) / 5000 * 0.42;
+  const color = STATUS_COLORS[listing.status] || STATUS_COLORS.available;
+
   const ref = useRef<THREE.Group>(null);
-  const glowRef = useRef<THREE.Mesh>(null);
-  const targetY = premium ? h + 0.18 : h / 2;
+  const targetY = hovered ? ground + 0.4 : ground;
 
   useFrame((_, dt) => {
     if (!ref.current) return;
-    const t = hovered ? 0.3 : 0;
-    ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, t, 4, dt);
-    const s = hovered ? 1.04 : 1;
-    ref.current.scale.lerp(new THREE.Vector3(s, s, s), 0.1);
-    if (glowRef.current) {
-      const mat = glowRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = THREE.MathUtils.damp(mat.opacity, hovered ? 0.9 : 0.0, 6, dt);
-    }
+    ref.current.position.y = THREE.MathUtils.damp(ref.current.position.y, targetY, 4, dt);
+    const s = hovered ? 1.55 : 1;
+    ref.current.scale.lerp(new THREE.Vector3(s, s, s), 0.15);
   });
-
-  const repeats = useMemo(() => {
-    const u = Math.max(1, Math.round(w * 1.4));
-    const v = Math.max(1, Math.round(h * 0.8));
-    return { u, v };
-  }, [w, h]);
-
-  const sideTexture = useMemo(() => {
-    const t = WINDOW_TEXTURE.clone();
-    t.needsUpdate = true;
-    t.repeat.set(repeats.u, repeats.v);
-    return t;
-  }, [repeats.u, repeats.v]);
 
   return (
     <group
       ref={ref}
-      position={[x, 0, z]}
-      onPointerOver={(e) => { e.stopPropagation(); onHover(id); document.body.style.cursor = 'pointer'; }}
+      position={[x, ground, z]}
+      onPointerOver={(e) => { e.stopPropagation(); onHover(listing.id); document.body.style.cursor = 'pointer'; }}
       onPointerOut={() => { onHover(null); document.body.style.cursor = 'auto'; }}
     >
-      <mesh castShadow receiveShadow position={[0, h / 2, 0]}>
-        <boxGeometry args={[w, h, d]} />
+      <mesh castShadow>
+        <boxGeometry args={[size, 0.6, size]} />
         <meshStandardMaterial
-          map={sideTexture}
-          color={hovered ? '#1a2540' : '#0c1626'}
-          emissive={premium ? '#3a2a08' : '#0a1a2a'}
-          emissiveIntensity={premium ? 0.45 : 0.2}
-          metalness={0.55}
-          roughness={0.4}
+          color={color}
+          emissive={color}
+          emissiveIntensity={hovered ? 0.7 : 0.35}
+          metalness={0.35}
+          roughness={0.45}
         />
       </mesh>
 
-      {premium && (
-        <mesh ref={glowRef} position={[0, h + 0.05, 0]}>
-          <boxGeometry args={[w * 0.85, 0.08, d * 0.85]} />
-          <meshBasicMaterial color="#F0CB55" transparent opacity={0} />
-        </mesh>
-      )}
+      <mesh position={[0, 0.35, 0]}>
+        <boxGeometry args={[size * 1.05, 0.04, size * 1.05]} />
+        <meshBasicMaterial color={color} transparent opacity={0.45} />
+      </mesh>
 
       {hovered && (
-        <Html position={[0, h + 1.0, 0]} center distanceFactor={10} zIndexRange={[100, 0]}>
-          <div className="pointer-events-none rounded-lg border border-accent/40 bg-background/90 px-3 py-2 shadow-2xl shadow-accent/20 backdrop-blur-md">
-            <div className="text-[10px] uppercase tracking-wider text-accent">{label}</div>
-            <div className="mt-0.5 font-display text-lg font-semibold text-foreground">{price}</div>
-            <div className="text-[11px] text-muted-foreground">{area}</div>
+        <Html position={[0, 0.9, 0]} center distanceFactor={11} zIndexRange={[100, 0]}>
+          <div className="pointer-events-none whitespace-nowrap rounded-lg border border-accent/40 bg-background/90 px-3 py-2 shadow-2xl shadow-accent/20 backdrop-blur-md">
+            <div className="text-[10px] uppercase tracking-wider text-accent">
+              {listing.region} · {listing.status === 'available' ? 'Satılık' : listing.status === 'reserved' ? 'Rezerve' : 'Satıldı'}
+            </div>
+            <div className="mt-0.5 font-display text-lg font-semibold text-foreground">
+              {formatPrice(listing.price, (listing.currency as 'TRY' | 'USD') || 'TRY')}
+            </div>
+            <div className="text-[11px] text-muted-foreground">{formatArea(listing.area_m2)}</div>
           </div>
         </Html>
       )}
@@ -167,62 +201,57 @@ function Building({
   );
 }
 
-function GroundPlate() {
-  return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
-      <circleGeometry args={[14, 64]} />
-      <meshStandardMaterial
-        color="#08111f"
-        emissive="#0a1628"
-        emissiveIntensity={0.3}
-        metalness={0.2}
-        roughness={0.85}
-      />
-    </mesh>
-  );
-}
-
-function GridLines() {
-  const ref = useRef<THREE.LineSegments>(null);
-  const geom = useMemo(() => {
-    const verts: number[] = [];
-    const step = 1.1;
-    const half = 7;
-    for (let i = -half; i <= half; i++) {
-      verts.push(i * step, 0, -half * step, i * step, 0, half * step);
-      verts.push(-half * step, 0, i * step, half * step, 0, i * step);
+function RegionLabels({ listings }: { listings: Listing[] }) {
+  const regionsShown = useMemo(() => {
+    const map = new Map<string, [number, number, number]>();
+    for (const l of listings) {
+      const slug = (l.region || '').toLowerCase();
+      if (!map.has(slug)) {
+        const [x, z] = getRegionPos(slug);
+        map.set(slug, [x, z, 1]);
+      } else {
+        map.set(slug, [map.get(slug)![0], map.get(slug)![1], map.get(slug)![2] + 1]);
+      }
     }
-    const g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
-    return g;
-  }, []);
-
-  useFrame((_, dt) => {
-    if (!ref.current) return;
-    const mat = ref.current.material as THREE.LineBasicMaterial;
-    mat.opacity = 0.18 + Math.sin(performance.now() * 0.0008) * 0.05;
-  });
+    return Array.from(map.entries());
+  }, [listings]);
 
   return (
-    <lineSegments ref={ref} geometry={geom} position={[0, 0.005, 0]}>
-      <lineBasicMaterial color="#D4A82B" transparent opacity={0.18} />
-    </lineSegments>
+    <>
+      {regionsShown.map(([slug, [x, z, count]]) => {
+        const h = noise2D(x, z) * 0.8;
+        return (
+          <Html
+            key={slug}
+            position={[x, h + 2.2, z]}
+            center
+            distanceFactor={14}
+            zIndexRange={[50, 0]}
+            style={{ pointerEvents: 'none' }}
+          >
+            <div className="rounded-md border border-white/10 bg-background/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-accent/80 backdrop-blur-sm">
+              {slug} · {count}
+            </div>
+          </Html>
+        );
+      })}
+    </>
   );
 }
 
-function AutoCamera() {
+function SlowCamera() {
   const { camera } = useThree();
-  const ref = useRef({ angle: 0.4, radius: 13, height: 5.5 });
+  const ref = useRef({ angle: 0.6, radius: 22, height: 14 });
 
   useFrame((_, dt) => {
-    ref.current.angle += dt * 0.04;
+    ref.current.angle += dt * 0.018;
     const { angle, radius, height } = ref.current;
     const targetX = Math.cos(angle) * radius;
     const targetZ = Math.sin(angle) * radius;
-    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 1.2, dt);
-    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 1.2, dt);
-    camera.position.y = THREE.MathUtils.damp(camera.position.y, height, 1.2, dt);
-    camera.lookAt(0, 1, 0);
+    camera.position.x = THREE.MathUtils.damp(camera.position.x, targetX, 0.6, dt);
+    camera.position.z = THREE.MathUtils.damp(camera.position.z, targetZ, 0.6, dt);
+    camera.position.y = THREE.MathUtils.damp(camera.position.y, height, 0.6, dt);
+    camera.lookAt(0, 0, -2);
   });
 
   return null;
@@ -231,23 +260,23 @@ function AutoCamera() {
 function GoldParticles() {
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
-    const arr = new Float32Array(140 * 3);
-    for (let i = 0; i < 140; i++) {
-      arr[i * 3] = (Math.random() - 0.5) * 26;
-      arr[i * 3 + 1] = Math.random() * 9 + 1.5;
-      arr[i * 3 + 2] = (Math.random() - 0.5) * 26;
+    const arr = new Float32Array(120 * 3);
+    for (let i = 0; i < 120; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 32;
+      arr[i * 3 + 1] = Math.random() * 8 + 1.5;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 28;
     }
     return arr;
   }, []);
 
   useFrame((_, dt) => {
     if (!ref.current) return;
-    ref.current.rotation.y += dt * 0.015;
+    ref.current.rotation.y += dt * 0.012;
     const pos = ref.current.geometry.attributes.position as THREE.BufferAttribute;
     for (let i = 0; i < pos.count; i++) {
       let y = pos.getY(i);
-      y += dt * 0.25;
-      if (y > 11) y = 1.5;
+      y += dt * 0.22;
+      if (y > 10) y = 1.5;
       pos.setY(i, y);
     }
     pos.needsUpdate = true;
@@ -256,15 +285,15 @@ function GoldParticles() {
   return (
     <points ref={ref}>
       <bufferGeometry>
-        <bufferAttribute attach="attributes-position" count={140} array={positions} itemSize={3} args={[positions, 3]} />
+        <bufferAttribute attach="attributes-position" count={120} array={positions} itemSize={3} args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.05} color="#F0CB55" transparent opacity={0.6} sizeAttenuation />
+      <pointsMaterial size={0.05} color="#F0CB55" transparent opacity={0.5} sizeAttenuation />
     </points>
   );
 }
 
-export function HeroScene() {
-  const [hovered, setHovered] = useState<number | null>(null);
+function HeroScene({ listings }: { listings: Listing[] }) {
+  const [hovered, setHovered] = useState<string | null>(null);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -298,50 +327,51 @@ export function HeroScene() {
         gl.setClearColor(new THREE.Color('#040a14'), 1);
       }}
     >
-      <PerspectiveCamera makeDefault fov={45} position={[10, 6, 10]} />
-      <AutoCamera />
+      <PerspectiveCamera makeDefault fov={50} position={[18, 14, 18]} />
+      <SlowCamera />
 
-      <fog attach="fog" args={['#040a14', 12, 28]} />
+      <fog attach="fog" args={['#040a14', 18, 38]} />
 
-      <ambientLight intensity={0.3} color="#3a4a6a" />
-      <directionalLight
-        position={[8, 12, 5]}
-        intensity={1.1}
-        color="#ffe8b8"
-        castShadow
-        shadow-mapSize={[1024, 1024]}
-        shadow-camera-far={30}
-        shadow-camera-left={-12}
-        shadow-camera-right={12}
-        shadow-camera-top={12}
-        shadow-camera-bottom={-12}
-      />
-      <pointLight position={[-6, 4, -6]} intensity={0.6} color="#D4A82B" />
-      <pointLight position={[5, 2, 6]} intensity={0.4} color="#F0CB55" />
-      <pointLight position={[0, 8, 0]} intensity={0.25} color="#5fa9c9" />
+      <ambientLight intensity={0.4} color="#3a4a6a" />
+      <directionalLight position={[10, 14, 6]} intensity={1.0} color="#ffe8b8" castShadow shadow-mapSize={[1024, 1024]} />
+      <pointLight position={[-6, 4, -6]} intensity={0.5} color="#D4A82B" />
+      <pointLight position={[6, 3, 6]} intensity={0.4} color="#F0CB55" />
 
-      <Stars radius={50} depth={50} count={1200} factor={2.5} fade speed={0.3} />
       <GoldParticles />
 
-      <GroundPlate />
-      <GridLines />
-      {CITY.map((b) => (
-        <Building key={b.id} {...b} hovered={hovered === b.id} onHover={setHovered} />
+      <TopoMap />
+      <ContourLines />
+
+      {listings.map((l) => (
+        <ListingMarker key={l.id} listing={l} hovered={hovered === l.id} onHover={setHovered} />
       ))}
 
+      <RegionLabels listings={listings} />
+
       <EffectComposer multisampling={0}>
-        <Bloom intensity={0.7} luminanceThreshold={0.5} luminanceSmoothing={0.5} mipmapBlur />
-        <Vignette eskil={false} offset={0.1} darkness={0.7} />
+        <Bloom intensity={0.6} luminanceThreshold={0.5} luminanceSmoothing={0.5} mipmapBlur />
+        <Vignette eskil={false} offset={0.15} darkness={0.6} />
       </EffectComposer>
     </Canvas>
   );
 }
 
 export function Hero3D() {
+  const [listings, setListings] = useState<Listing[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    pb.collection('listings')
+      .getList<Listing>(1, 80, { filter: 'published = true', sort: '-featured,-created' })
+      .then(({ items }) => { if (!cancelled) setListings(items); })
+      .catch(() => { /* sessiz — boş sahne fallback */ });
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <section className="relative h-screen w-full overflow-hidden">
       <div className="absolute inset-0">
-        <HeroScene />
+        <HeroScene listings={listings} />
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-10 flex items-center">
@@ -350,7 +380,7 @@ export function Hero3D() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.2 }}
-            className="max-w-2xl"
+            className="pointer-events-auto max-w-2xl"
           >
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/5 px-4 py-1.5 text-xs uppercase tracking-[0.2em] text-accent">
               <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse-glow" />
