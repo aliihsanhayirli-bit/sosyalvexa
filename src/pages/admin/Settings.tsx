@@ -63,8 +63,13 @@ export default function AdminSettings() {
             whatsapp: r.whatsapp ?? '',
           });
         } else {
-          const created = await pb.collection('settings').create<SettingsRecord>({ ...EMPTY, singleton: true } as never);
-          setId(created.id);
+          try {
+            const created = await pb.collection('settings').create<SettingsRecord>({ ...EMPTY, singleton: true } as never);
+            setId(created.id);
+          } catch (createErr) {
+            console.error('Settings auto-create failed (seed migration should prevent this):', createErr);
+            toast.error('Ayar kaydı oluşturulamadı. Sayfayı yenileyin veya PB migration çalıştırın.');
+          }
         }
       } catch (e) {
         toast.error('Ayarlar yüklenemedi: ' + (e as Error).message);

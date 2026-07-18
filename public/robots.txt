@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://temelliarsa.com/sitemap.xml
+Sitemap: https://gydgrup.com.tr/sitemap.xml

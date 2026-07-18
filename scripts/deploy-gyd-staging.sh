@@ -1,16 +1,15 @@
 #!/bin/bash
-# GYD Grup — Staging build & deploy
+# GYD Grup — GYD staging build & deploy
 # Production'a dokunmaz. /var/www/gydgrup-staging/ altına koyar.
 set -e
 
 cd "$(dirname "$0")/.."
 
-echo "→ Build (staging mode)"
-VITE_STAGING=1 npm run build
+echo "→ Build (GYD staging mode)"
+VITE_GYD_STAGING=1 npm run build
 
 echo "→ Deploy to /var/www/gydgrup-staging/"
 mkdir -p /var/www/gydgrup-staging
 rsync -a --delete dist/ /var/www/gydgrup-staging/dist/
 
-echo "→ Restart nothing (static build)"
-echo "OK. Staging built. Şimdi nginx'e /gyd-staging/ location ekleyin ve reload edin."
+echo "OK. GYD staging built. nginx location /gyd-staging/ aktif."

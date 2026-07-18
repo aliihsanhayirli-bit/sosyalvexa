@@ -144,7 +144,7 @@ async function getRAGContext(query, k = RAG_TOP_K) {
 
 export function apiPlugin() {
   return {
-    name: 'yca-api-plugin',
+    name: 'gyd-api-plugin',
     configureServer(server) { registerMiddleware(server); },
     configurePreviewServer(server) { registerMiddleware(server); },
   };

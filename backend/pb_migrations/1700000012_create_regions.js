@@ -17,8 +17,8 @@ migrate((db) => {
       { name: 'district', type: 'text', required: true, options: { max: 100 } },
       { name: 'highlight', type: 'bool', required: false, options: {} },
       { name: 'description', type: 'text', required: false, options: { max: 1000 } },
-      { name: 'stats', type: 'json', required: false, options: {} }, // [{ value, label }]
-      { name: 'highlights', type: 'json', required: false, options: {} }, // string[]
+      { name: 'stats', type: 'json', required: false, options: { maxSize: 10000 } }, // [{ value, label }]
+      { name: 'highlights', type: 'json', required: false, options: { maxSize: 10000 } }, // string[]
       { name: 'cover_image', type: 'file', required: false, options: { maxSelect: 1, maxSize: 8388608, mimeTypes: ['image/jpeg', 'image/png', 'image/webp'] } },
     ],
     indexes: [

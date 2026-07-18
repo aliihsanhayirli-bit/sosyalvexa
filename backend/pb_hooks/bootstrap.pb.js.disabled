@@ -1,4 +1,4 @@
-// YCA Yatırım — Bootstrap Hook
+// GYD Grup — Bootstrap Hook
 // Admin user yoksa ilk serve'de oluşturur (idempotent).
 // NOT: PocketBase v0.22'de bu hook çağrısı onBootstrap ile yapılmalı;
 // onServe v0.22.21'de tanımsız (ReferenceError atar).
@@ -15,16 +15,16 @@ onBootstrap((e) => {
   }
 
   try {
-    dao.findFirstRecordByData(usersCol, 'email', 'admin@ycayatirim.com.tr');
+    dao.findFirstRecordByData(usersCol, 'email', 'admin@gydgrup.com.tr');
   } catch {
     try {
       const rec = new Record(usersCol, {
         username: 'admin',
-        email: 'admin@ycayatirim.com.tr',
+        email: 'admin@gydgrup.com.tr',
         emailVisibility: true,
-        password: process.env.YCA_ADMIN_PASSWORD || 'Yca2024!Admin',
-        passwordConfirm: process.env.YCA_ADMIN_PASSWORD || 'Yca2024!Admin',
-        name: 'YCA Admin',
+        password: process.env.GYD_ADMIN_PASSWORD || 'Gyd2024!Admin',
+        passwordConfirm: process.env.GYD_ADMIN_PASSWORD || 'Gyd2024!Admin',
+        name: 'GYD Admin',
       });
       dao.saveRecord(rec);
       console.log('[bootstrap] admin user otomatik olusturuldu');

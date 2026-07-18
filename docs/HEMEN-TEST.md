@@ -7,8 +7,8 @@
 ## 1. PocketBase admin hesabı oluştur
 
 ```bash
-cd /root/yca/backend
-./pocketbase admin create admin@ycayatirim.com.tr 'GucluSifre123!'
+cd /root/gyd/gyd/backend
+./pocketbase admin create admin@gydgrup.com.tr 'GucluSifre2026!'
 # Eğer zaten hesap varsa "account already exists" der, mevcut şifreyle giriş yap.
 ```
 
@@ -17,13 +17,14 @@ cd /root/yca/backend
 ## 2. PocketBase'i başlat (migration'lar otomatik uygulanır)
 
 ```bash
-cd /root/yca/backend
+cd /root/gyd/gyd/backend
 ./pocketbase serve
 # → http://127.0.0.1:8090/_/  (Admin UI)
 # → http://127.0.0.1:8090/api/ (REST API)
 # Migration'lar otomatik uygulanır:
 #   ✓ 1700000009_create_settings  (Settings.tsx artık çalışır)
 #   ✓ 1700000010_relax_bot_documents_rules  (RAG public okuma aktif)
+#   ✓ 1700000012_create_regions  (9 bölge seed)
 # Log'da "Successfully applied migration" mesajlarını gör.
 ```
 
@@ -32,7 +33,7 @@ cd /root/yca/backend
 ## 3. Vite dev server (ayrı terminal)
 
 ```bash
-cd /root/yca
+cd /root/gyd/gyd
 npm run dev
 # → http://localhost:5173
 # → http://localhost:5173/admin
@@ -43,51 +44,62 @@ npm run dev
 ## 4. Admin'e giriş
 
 `http://localhost:5173/admin/login`
-- E-posta: `admin@ycayatirim.com.tr`
-- Şifre: `GucluSifre123!`
+- E-posta: `admin@gydgrup.com.tr`
+- Şifre: `GucluSifre2026!`
 
 ---
 
-## 5. İlk 5 Temelli arsası (PocketBase admin UI'dan ekle)
+## 5. İlk 9 Ankara arsası (PocketBase admin UI'dan ekle)
 
 `http://127.0.0.1:8090/_/` → Collections → **listings** → **New record**
 
-Aşağıdaki 5 kaydı sırayla ekle (veya `pb_data/seed/listings.json` dosyasını import et — Collections → listings → Import).
+Aşağıdaki kayıtları bölgelere dağıtılmış şekilde ekle (veya `pb_data/seed/listings.json` dosyasını import et — Collections → listings → Import).
 
 | # | title | slug | region | area_m2 | price | currency | imar_status | tapu_status | status | published |
 |---|---|---|---|---|---|---|---|---|---|---|
-| 1 | Temelli Merkez 500 m² Arsa | temelli-merkez-500 | temelli | 500 | 2500000 | TRY | Konut İmarlı (%25) | Tapu Hazır | available | true |
-| 2 | Temelli Kuzey 1200 m² Yatırımlık | temelli-kuzey-1200 | temelli | 1200 | 4800000 | TRY | Konut İmarlı (%15) | Tapu Hazır | available | true |
-| 3 | Temelli Güney 800 m² Tarla | temelli-guney-800 | temelli | 800 | 1800000 | TRY | Tarla | Tapu Hazır | available | true |
-| 4 | Sincan Temelli Sınırı 2000 m² | sincan-temelli-2000 | sincan | 2000 | 7500000 | TRY | Konut İmarlı (%30) | İpotekli | reserved | true |
-| 5 | Temelli Doğu 350 m² Köşe Parsel | temelli-dogu-350 | temelli | 350 | 1750000 | TRY | Konut İmarlı (%25) | Tapu Hazır | available | true |
+| 1 | Çankaya Kızılay 450 m² Konut İmarlı | cankaya-kizilay-450 | cankaya | 450 | 4500000 | TRY | Konut İmarlı (%30) | Tapu Hazır | available | true |
+| 2 | Çankaya Çukurambar 800 m² Karma İmarlı | cankaya-cukurambar-800 | cankaya | 800 | 9600000 | TRY | Karma İmarlı (%40) | Tapu Hazır | available | true |
+| 3 | Etimesgut Bağlıca 600 m² Konut İmarlı | etimesgut-baglica-600 | etimesgut | 600 | 3600000 | TRY | Konut İmarlı (%25) | Tapu Hazır | available | true |
+| 4 | Mamak Akdere 1000 m² Yatırımlık | mamak-akdere-1000 | mamak | 1000 | 3200000 | TRY | Konut İmarlı (%20) | Tapu Hazır | available | true |
+| 5 | Yenimahalle Demetevler 350 m² Köşe | yenimahalle-demetevler-350 | yenimahalle | 350 | 2100000 | TRY | Konut İmarlı (%25) | Tapu Hazır | available | true |
+| 6 | Sincan Fatih 1200 m² Konut İmarlı | sincan-fatih-1200 | sincan | 1200 | 4200000 | TRY | Konut İmarlı (%20) | İpotekli | reserved | true |
+| 7 | Pursaklar Saray 700 m² Konut İmarlı | pursaklar-saray-700 | pursaklar | 700 | 2450000 | TRY | Konut İmarlı (%20) | Tapu Hazır | available | true |
+| 8 | Altındağ Aydınlıkevler 500 m² Karma | altindag-aydinlikevler-500 | altindag | 500 | 1800000 | TRY | Karma İmarlı (%30) | Tapu Hazır | available | true |
+| 9 | Polatlı Yeni Mahalle 2000 m² Yatırımlık | polatli-yeni-mahalle-2000 | polatli | 2000 | 5400000 | TRY | Konut İmarlı (%15) | Tapu Hazır | available | true |
 
 > **Alanlar:** title, slug, description, region (slug), area_m2 (number), price (number), currency ("TRY"), imar_status, tapu_status, status (available/reserved/sold), published (bool).
 
 Örnek description (1. arsa için):
-> "Temelli merkezde, okula ve ana caddeye 5 dakika mesafede, %25 imarlı, altyapısı (yol, su, elektrik) hazır, köşe parsel. Yatırıma veya kendi evinizi yapmaya uygun."
+> "Çankaya Kızılay merkezde, metro ve ana caddeye 3 dakika mesafede, %30 imarlı, altyapısı (yol, su, elektrik, doğalgaz) hazır, köşe parsel. Yatırıma veya kendi evinizi yapmaya uygun. **Sadece imarlı arsa** — GYD Grup güvencesiyle."
 
 ---
 
-## 6. İlk 3 RAG dokümanı (Bot bilgi tabanı)
+## 6. İlk 2 RAG dokümanı (Bot bilgi tabanı)
+
+> ⚠️ Eski YCA RAG dokümanları Temelli özelinde; GYD için Ankara geneli + imarlı arsa odaklı yeniden yazılacak. Aşağıdaki 2 doküman starter olarak kullanılabilir.
 
 `/admin/bot` → **Doküman Yükle** → aşağıdaki metinleri `.md` veya `.txt` olarak kaydet, yükle.
 
-### 📄 6.1 `temelli-imar-durumu.md`
+### 📄 6.1 `ankara-imarli-arsa-rehberi.md`
 
 ```markdown
-# Temelli Bölgesi İmar Durumu
+# Ankara Geneli İmarlı Arsa Rehberi (GYD Grup)
 
-Temelli, Ankara'nın batısında, Polatlı sınırında yer alan gelişmekte olan bir bölgedir. Bölgenin imar durumu parsel bazında değişir ve aşağıdaki kategorilere ayrılır:
+Ankara'nın tüm merkez ilçelerinde (Çankaya, Etimesgut, Mamak, Altındağ, Yenimahalle, Keçiören, Sincan, Pursaklar, Polatlı) imarlı arsa almak isteyenler için kapsamlı rehber. **GYD Grup sadece imarlı arsa** ile ilgilenir; imarsız, hisseli, tapuya hazır olmayan arsalar için uygun şekilde yönlendirme yaparız.
 
-## Konut İmarlı Parseller (TAKS %25, KAKS %1.5)
-Temelli merkez ve kuzey bölgelerinde yoğunlaşır. Bu parseller yapılaşmaya açıktır, 3 kata kadar konut veya ticari alan inşa edilebilir. Altyapı (yol, su, elektrik, kanalizasyon) genellikle hazırdır. Yatırım için en cazip kategoridir.
+## İmar Durumu Kategorileri
 
-## Ticari İmarlı Parseller (Ana Cadde Üzeri)
-Temelli merkez ana cadde (Ankara-Polatlı yolu) üzerinde sınırlı sayıda parsel ticari imara açıktır. Bu parseller mağaza, ofis, akaryakıt istasyonu gibi amaçlarla kullanılabilir. Fiyatlar konut imarına göre %30-50 daha yüksektir.
+### Konut İmarlı Parseller (TAKS %20-30, KAKS %1.0-1.5)
+Ankara merkez ilçelerin tamamında yaygın. 3-5 kata kadar konut inşa edilebilir. Altyapı (yol, su, elektrik, kanalizasyon, doğalgaz) genellikle hazır. Yatırım için en cazip kategoridir.
 
-## Tarla Vasıflı Parseller
-Güney ve doğu bölgelerinde yaygın. İmara kapalı, sadece tarımsal amaçlı kullanılabilir. Fiyatlar konut imarına göre %40-60 daha düşüktür. Yatırımcılar için orta-uzun vadede imar planı değişikliği beklentisiyle stratejik bir seçenektir.
+### Karma İmarlı Parseller (Alt Zemin Ticaret + Üst Konut)
+Genellikle ana cadde üzerinde. Zemin katta mağaza/ofis, üst katlarda konut. Yatırım getirisi yüksek, ama yatırım süresi daha uzundur.
+
+### Ticari İmarlı Parseller
+Ankara'nın ana caddeleri (Kızılay, Çukurambar, Bahçelievler, Tunalı) üzerinde sınırlı sayıda parsel ticari imara açıktır. Fiyatlar konut imarına göre %50-100 daha yüksektir.
+
+### Tarla Vasıflı Parseller
+İmara kapalı, sadece tarımsal amaçlı kullanılabilir. **GYD Grup tarla vasıflı arsalarla ilgilenmez.**
 
 ## İmar Süreci
 1. Parsel sahibi veya alıcı belediyeye imar durumu başvurusu yapar
@@ -106,7 +118,7 @@ Güney ve doğu bölgelerinde yaygın. İmara kapalı, sadece tarımsal amaçlı
 ```markdown
 # Tapu İşlemleri ve Vergiler
 
-YCA Yatırım olarak tüm müşterilerimizin tapu süreçlerinde yanındayız. Aşağıda bilmeniz gereken temel adımlar:
+GYD Grup olarak tüm müşterilerimizin tapu süreçlerinde yanındayız. Aşağıda bilmeniz gereken temel adımlar:
 
 ## Alım-Satım Süreci (Tipik 5-10 İş Günü)
 
@@ -126,14 +138,14 @@ YCA Yatırım olarak tüm müşterilerimizin tapu süreçlerinde yanındayız. A
    - Tapu harcı peşin ödenir
    - Yeni tapu alıcı adına çıkarılır
 
-## Vergi ve Masraflar (2024 Güncel)
+## Vergi ve Masraflar (2026 Güncel)
 
 | Kalem | Oran | Ödeyen |
 |---|---|---|
 | **Tapu Harcı** | %4 (alıcı) + %4 (satıcı) | Her iki taraf kendi payını |
 | **KDV** | %0 (konut imarlı arsa) | Muaf |
 | **Emlak Vergisi** | %0.1-0.3 (yıllık) | Tapu sahibi |
-| **Değer Artış Payı** | Satış fiyatı - alış fiyatı (eğer 5 yıl içinde satılırsa) | Satıcı (stopaj) |
+| **Değer Artış Payı** | Satış fiyatı - alış fiyatı (5 yıl içinde satılırsa) | Satıcı (stopaj) |
 | **Danışman Komisyonu** | %2-3 | Genellikle alıcı |
 
 ## Önemli Belgeler (Her Zaman İstenmeli)
@@ -154,83 +166,12 @@ YCA Yatırım olarak tüm müşterilerimizin tapu süreçlerinde yanındayız. A
 4. ❌ Komşu parsel ile sınır ihtilafı yaşamak (çap belgesi ile önlenir)
 5. ❌ Değer artış payı stopajını hesaplamamak
 
-## YCA Desteği
+## GYD Desteği
 
-Tüm bu süreçleri sizin adınıza takip ediyoruz. Sözleşme öncesi kontrolden tapu devrine kadar her aşamada yanınızdayız. **Ücretsiz ön danışmanlık için:** 0545 655 10 70
+Tüm bu süreçleri sizin adınıza takip ediyoruz. Sözleşme öncesi kontrolden tapu devrine kadar her aşamada yanınıdayız. **Ücretsiz ön danışmanlık için:** 0532 489 25 67
 ```
 
-### 📄 6.3 `yatirim-analizi-ve-getiri.md`
-
-```markdown
-# Temelli Bölgesi Yatırım Analizi
-
-Son 5 yıllık verilere göre Temelli bölgesi, Ankara'nın en hızlı değer kazanan arsa bölgelerinden biridir. Bu rapor, yatırımcılarımız için hazırlanmıştır.
-
-## Tarihsel Değer Artışı (2020-2024)
-
-| Yıl | Konut İmarlı m² Fiyatı | Yıllık Artış |
-|---|---|---|
-| 2020 | 1.800 TL | — |
-| 2021 | 2.400 TL | %33 |
-| 2022 | 3.500 TL | %46 |
-| 2023 | 5.200 TL | %49 |
-| 2024 | 6.800 TL | %31 |
-
-**5 yıllık kümülatif artış: %278** (konut imarlı, ortalama)
-
-## Temelli'yi Cazip Kılan Faktörler
-
-### 1. Konum Avantajı
-- Ankara merkezine 45 km, Polatlı'ya 25 km
-- Ankara-İstanbul yüksek hızlı tren hattına 8 km mesafede (YHT istasyonu planlanıyor)
-- TEM otoyoluna direkt bağlantı
-
-### 2. Altyapı Yatırımları (Devam Eden / Planlanan)
-- YHT istasyonu projesi (2026 hedefli)
-- Yeni sanayi bölgesi (Toplu Konut İdaresi projesi)
-- 3. havalimanı bağlantı yolu planlaması
-- Doğalgaz altyapısı 2024 tamamlandı
-
-### 3. OSB ve Sanayi Yakınlığı
-- Sincan Organize Sanayi Bölgesi 12 km
-- OSTİM 35 km
-- Yeni sanayi bölgesi planlaması içinde
-
-## Yatırım Stratejileri
-
-### Kısa Vade (0-2 yıl) — Al-Sat
-- İmara açık, altyapısı hazır parsellerde
-- Hedef: %30-50 değer artışı
-- Risk: Orta (piyasa dalgalanması)
-
-### Orta Vade (2-5 yıl) — Geliştirme
-- YHT istasyonu yakınındaki parseller
-- Hedef: %80-120 toplam getiri
-- Risk: Düşük (altyapı tamamlandıkça)
-
-### Uzun Vade (5+ yıl) — Portföy
-- Sanayi bölgesi yakını, tarla vasıflı parseller
-- İmar değişikliği beklentisi
-- Hedef: %200-400 toplam getiri
-- Risk: Düşük (uzun vadede imar artışı)
-
-## Dikkat Edilmesi Gerekenler
-
-1. **Lokasyon seçimi** — YHT istasyonu, ana cadde, OSB yakınlığı kritik
-2. **İmar durumu** — Kesinlikle imara açık olmalı
-3. **Tapu temizliği** — İpotek, haciz, şerh olmamalı
-4. **Altyapı durumu** — Yol, su, elektrik, doğalgaz mevcut mu?
-5. **Komşu parseller** — Gelişme potansiyeli olan bölgeler tercih edilmeli
-
-## Vergi Optimizasyonu
-
-- 5 yıldan önce satışta **değer artış payı stopajı** ödenir (%15-40)
-- 5 yıl sonra satışta stopaj yok
-- Emlak vergisi yıllık ödenir, düşük tutarlıdır
-- Yatırım amaçlı alımlarda **KDV muafiyeti** vardır
-```
-
-Yükleme sonrası: her dosya için "X parça embed edildi" toast'u çıkmalı. ~800 karakterlik chunk'lara bölünür, Gemini `text-embedding-004` ile vektörleştirilir.
+Yükleme sonrası: her dosya için "X parça embed edildi" toast'u çıkmalı. ~800 karakterlik chunk'lara bölünür, Gemini `gemini-embedding-001` ile vektörleştirilir.
 
 ---
 
@@ -238,18 +179,18 @@ Yükleme sonrası: her dosya için "X parça embed edildi" toast'u çıkmalı. ~
 
 ### ✅ Adım 1: Sitesi aç
 `http://localhost:5173/`
-- 3D harita yüklensin (Temelli topografik)
-- 5 arsa portföyde görünsün (`/arsalar`)
-- 6 bölge listesi (`/bolgeler`)
+- 3D harita yüklensin (Ankara topografik)
+- 9 arsa portföyde görünsün (`/arsalar`)
+- 9 bölge listesi (`/bolgeler`)
 
 ### ✅ Adım 2: Chat widget testi (RAG'sız)
 - Sağ alt köşedeki chat balonuna tıkla
-- "Merhaba" yaz → "Merhaba! Arsa almak mı, satmak mı istiyorsunuz?" al (intent: general)
+- "Merhaba" yaz → "Merhaba! İmarlı arsa almak mı, satmak mı, yoksa yatırım danışmanlığı mı istiyorsunuz?" al (intent: general)
 - "Arsa almak istiyorum" yaz → "Bütçeniz ne kadar?" (intent: buyer)
 
 ### ✅ Adım 3: Chat RAG testi (yüklenen dokümanlarla)
-- "Temelli'de imar durumu nasıl?" yaz
-- Cevap **imar dokümanından** parça içermeli (system prompt'a `[temelli-imar-durumu]` inject edilir)
+- "Çankaya'da imar durumu nasıl?" yaz
+- Cevap **imar dokümanından** parça içermeli (system prompt'a `[ankara-imarli-arsa-rehberi]` inject edilir)
 - Network sekmesinde `/api/chat` response'unda `ragUsed: true` gör
 
 ### ✅ Adım 4: Bot ayarları
@@ -257,14 +198,14 @@ Yükleme sonrası: her dosya için "X parça embed edildi" toast'u çıkmalı. ~
 - System prompt, hoşgeldin mesajı, model adı düzenle → Kaydet
 - Test konsolunda "Tapu süreci nasıl işler?" yaz → RAG cevabı + "Danışman görüşmesi" önerisi
 
-### ✅ Adım 5: Settings sayfası (artık çalışmalı)
+### ✅ Adım 5: Settings sayfası
 - `/admin/ayarlar`
 - Firma bilgileri, telefon, WhatsApp numarası düzenle
 - Entegrasyon durumları: PocketBase ✅, Gemini ✅, Meta ⏳ (token yok)
 
 ### ✅ Adım 6: Dashboard
 - `/admin`
-- 4 KPI kartı (PocketBase'ten canlı count): 5 arsa, 0 kişi, 0 konuşma, %24 dönüşüm (hardcoded)
+- 4 KPI kartı (PocketBase'ten canlı count): 9 arsa, 0 kişi, 0 konuşma, %24 dönüşüm (hardcoded)
 - Trafik grafiği (mock data, gerçek analytics değil)
 - Son lead'ler listesi (mock isimler — Ahmet Yılmaz vs.)
 
@@ -286,7 +227,7 @@ Eğer her şey çalışıyorsa:
 1. **Gemini key client'tan kaldır** (`Bot.tsx:70`) — güvenlik
 2. **PB_ENCRYPTION_KEY rotate** — git history temizle
 3. **Meta WhatsApp/Messenger/IG bağla** — gerçek müşteri mesajları
-4. **Zernio OAuth flow tamamla** — WhatsApp Business hesabı
+4. **Meta OAuth2 flow tamamla** — Facebook + Instagram
 5. **Production deploy** — Vercel + Oracle Cloud (docs/DEPLOY.md)
 6. **Backup stratejisi** — `pb_data/data.db` günlük snapshot
 
@@ -303,6 +244,7 @@ Eğer her şey çalışıyorsa:
 | RAG cevap gelmiyor | `bot_documents.chunks` dolu mu? `/api/rag/embed` hata log'u (PB log'da) |
 | 3D sahne yüklenmiyor | WebGL destekli tarayıcı, GPU acceleration açık |
 | `/api/chat` 500 | PB'ye `VITE_POCKETBASE_URL` ile erişilebiliyor mu? |
+| "YCA kalıntısı görüyorum" | Yanlış proje klasöründe çalışıyorsun. GYD: `/root/gyd/gyd`. YCA ayrı proje. |
 
 ---
 
@@ -314,9 +256,9 @@ Canlı demoya başlamadan önce:
 - [ ] PB serve çalışıyor, `/api/health` 200
 - [ ] Vite dev çalışıyor, port 5173 açık
 - [ ] Admin login başarılı
-- [ ] 5 arsa eklendi, `/arsalar` listede görünüyor
-- [ ] 3 RAG dokümanı yüklendi, chunk_count > 0
-- [ ] Site chat'ten "Temelli imar" sorusuna RAG cevabı geldi
+- [ ] 9 arsa eklendi, `/arsalar` listede görünüyor
+- [ ] 2 RAG dokümanı yüklendi, chunk_count > 0
+- [ ] Site chat'ten "Ankara imar" sorusuna RAG cevabı geldi
 - [ ] `/admin/ayarlar` açıldı, firma bilgileri kaydedildi
 - [ ] (Opsiyonel) Mobil görünüm test edildi
 

@@ -1,4 +1,4 @@
-// YCA Yatırım — Contacts (CRM) collection
+// GYD GRUP — Contacts (CRM) collection
 
 migrate((db) => {
   const collection = new Collection({

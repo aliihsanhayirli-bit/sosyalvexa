@@ -1,4 +1,4 @@
-// YCA Yatırım — PocketBase v0.21+ JS Migration
+// GYD GRUP — PocketBase v0.21+ JS Migration
 // Listings (arsalar) collection
 
 migrate((db) => {

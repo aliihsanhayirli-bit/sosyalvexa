@@ -1,12 +1,12 @@
 @echo off
-REM YCA Yatırım - Development ortamı
+REM GYD Grup - Development ortamı
 REM PocketBase + Vite dev server'ı birlikte başlatır
 
 setlocal
 
 echo.
 echo ============================================
-echo   YCA Yatirim - Development
+echo   GYD Grup - Development
 echo ============================================
 echo.
 
