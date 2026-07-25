@@ -54,7 +54,7 @@ export default function Home() {
                 <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Yeni</span>
               </div>
               <p className="font-display text-base leading-relaxed text-foreground sm:text-lg">
-                <span className="gold-text italic">Hemen olsun istemez misiniz?</span> Doğru olsun istemez misiniz? 1 kerede tam olsun ister misiniz?
+                <span className="gold-text italic">Yapay zeka çalışanlarımızla</span> hizmetinizdeyiz.
               </p>
             </div>
           </div>

@@ -26,7 +26,7 @@ function Laptop() {
         <ringGeometry args={[0.4, 0.45, 32]} />
         <meshBasicMaterial color="#D4A82B" transparent opacity={0.4} />
       </mesh>
-      <Html position={[0, 0.86, -0.72]} rotation={[-0.25, 0, 0]} center distanceFactor={2.5} zIndexRange={[100, 0]}>
+      <Html position={[0, 0.86, -0.72]} rotation={[-0.25, 0, 0]} center distanceFactor={2.5} zIndexRange={[5, 0]}>
         <div className="flex h-32 w-72 flex-col gap-1.5 rounded-md border border-accent/30 bg-background/95 p-3 shadow-2xl shadow-accent/30 backdrop-blur-md pointer-events-none">
           <div className="flex items-center gap-1.5">
             <div className="h-2 w-2 rounded-full bg-rose-500" />
@@ -62,7 +62,7 @@ function Monitor() {
         <boxGeometry args={[0.6, 0.04, 0.4]} />
         <meshStandardMaterial color="#0a1628" metalness={0.6} />
       </mesh>
-      <Html position={[0, 0, 0.06]} center distanceFactor={2.5} zIndexRange={[100, 0]}>
+      <Html position={[0, 0, 0.06]} center distanceFactor={2.5} zIndexRange={[5, 0]}>
         <div className="flex h-32 w-72 flex-col gap-1.5 rounded-md border border-accent/30 bg-background/95 p-2.5 shadow-2xl shadow-accent/30 backdrop-blur-md pointer-events-none">
           <div className="flex items-center justify-between">
             <div className="text-[10px] font-semibold text-accent">Meta Business Suite</div>
@@ -103,7 +103,7 @@ function Phone({ position, rotation }: { position: [number, number, number]; rot
         <planeGeometry args={[0.45, 0.9]} />
         <meshBasicMaterial color="#040a14" />
       </mesh>
-      <Html position={[0, 0, 0.027]} center distanceFactor={2} zIndexRange={[100, 0]}>
+      <Html position={[0, 0, 0.027]} center distanceFactor={2} zIndexRange={[5, 0]}>
         <div className="flex h-44 w-24 flex-col gap-1 rounded-md border border-accent/30 bg-background/95 p-1.5 shadow-2xl shadow-accent/30 backdrop-blur-md pointer-events-none">
           <div className="flex items-center justify-between text-[7px] text-muted-foreground">
             <span>9:41</span>
@@ -375,7 +375,7 @@ export function Hero3D() {
             </div>
 
             <h1 className="font-display text-4xl font-medium leading-[1.05] tracking-tight text-foreground sm:text-7xl">
-              Hemen olsun istemez <span className="gold-text italic">misiniz?</span>
+              İşletmenizi <span className="gold-text italic">Dijitale</span> Taşıyoruz
             </h1>
 
             <p className="mt-6 max-w-lg text-base leading-relaxed text-foreground/70 sm:text-lg">
