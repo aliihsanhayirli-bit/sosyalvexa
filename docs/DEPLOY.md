@@ -153,7 +153,7 @@ cd gyd
 npm install
 
 VITE_POCKETBASE_URL=https://www.gydgrup.com.tr \
-VITE_WHATSAPP_NUMBER=905324892567 \
+VITE_WHATSAPP_NUMBER=905452788073 \
 VITE_SITE_URL=https://www.gydgrup.com.tr \
 npm run build
 

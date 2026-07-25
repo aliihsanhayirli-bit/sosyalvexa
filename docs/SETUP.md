@@ -33,7 +33,7 @@ cp .env.example .env
 | `VITE_POCKETBASE_URL` | evet | PB REST adresi, dev: `http://127.0.0.1:8090` |
 | `VITE_GEMINI_API_KEY` | evet | https://aistudio.google.com/app/apikey |
 | `VITE_GEMINI_MODEL` | hayır | Varsayılan `gemini-1.5-flash` |
-| `VITE_WHATSAPP_NUMBER` | evet | `905324892567` (ülke kodu + numara, başında 0 yok) |
+| `VITE_WHATSAPP_NUMBER` | evet | `905452788073` (ülke kodu + numara, başında 0 yok) |
 | `VITE_SITE_URL` | evet | Dev: `http://localhost:5173` |
 | `GEMINI_API_KEY` | evet (server) | Vite plugin + PB hook için |
 | `GEMINI_MODEL` | hayır | Server-side model |
@@ -72,7 +72,7 @@ VPS'te `/opt/gyd-pocketbase/.env` ve `/opt/gyd-api/.env` ayrı tutulur. Detay: [
 `VITE_*` değişkenleri build anında bundle'a gömülür — production build öncesi güncellenmeli:
 ```bash
 VITE_POCKETBASE_URL=https://www.gydgrup.com.tr \
-VITE_WHATSAPP_NUMBER=905324892567 \
+VITE_WHATSAPP_NUMBER=905452788073 \
 VITE_SITE_URL=https://www.gydgrup.com.tr \
 npm run build
 ```

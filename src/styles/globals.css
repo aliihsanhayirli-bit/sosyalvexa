@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* GYD Grup — premium dark palette: lacivert + altın aksent */
+    /* Vexabiz Digital — premium dark palette: lacivert + altın aksent */
     --background: 220 45% 7%;
     --foreground: 40 25% 96%;
 
@@ -14,7 +14,7 @@
     --popover: 220 45% 8%;
     --popover-foreground: 40 25% 96%;
 
-    /* GYD koyu lacivert — logodaki 'G' ve banner zemin */
+    /* Vexabiz koyu lacivert — logo ve banner zemin */
     --primary: 224 35% 18%;
     --primary-foreground: 40 25% 96%;
 
@@ -24,7 +24,7 @@
     --muted: 220 25% 14%;
     --muted-foreground: 220 12% 65%;
 
-    /* GYD altın aksent — logodaki kuleler ve banner başlık */
+    /* Vexabiz altın aksent — logo ve başlıklar */
     --accent: 43 80% 52%;
     --accent-foreground: 220 45% 8%;
 

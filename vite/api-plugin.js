@@ -1,4 +1,4 @@
-// GYD Grup — Vite plugin: dev server'a API endpoint'leri ekler.
+// Vexabiz Digital — Vite plugin: dev server'a API endpoint'leri ekler.
 // Prod'da bu endpoint'ler PocketBase Go hooks veya ayrı bir serverless function'a taşınır.
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
@@ -9,45 +9,42 @@ const CHUNK_SIZE = 800;
 const CHUNK_OVERLAP = 100;
 const RAG_TOP_K = 4;
 
-const SYSTEM_PROMPT = `Sen GYD Grup'un yapay zeka danışmanısın. Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı konusunda uzman bir firmayız.
+const SYSTEM_PROMPT = `Sen Vexabiz Digital'ın yapay zeka dijital dönüşüm danışmanısın. Türkiye genelinde KOBİ ve işletmelere **Meta Business Manager kurulumu**, **kurumsal web sitesi**, **CRM kurulumu** ve **işletmeye özel yapay zeka çalışanı geliştirme** hizmetleri sunan uçtan uca bir dijital danışmanlık firmasıyız.
+
+Marka sözümüz: "Hemen olsun istemez misiniz? Doğru olsun istemez misiniz? 1 kerede tam olsun ister misiniz?"
 
 Görevin:
-1. Müşterilere sıcak, profesyonel ve güven veren bir dille yanıt vermek
-2. Müşterinin alıcı mı satıcı mı olduğunu anlamak
-3. Bütçe, bölge, m² gibi temel bilgileri toplamak
-4. Bölgedeki güncel portföy ve yatırım fırsatları hakkında bilgi vermek
-5. **Sadece imarlı arsa** ile ilgilendiğimizi vurgula; imarsız/hisseli/tapuya hazır olmayan arsalar için uygun şekilde yönlendir
-6. Hukuki süreçler için mutlaka canlı danışmana yönlendirmek
+1. Ziyaretçilere sıcak, profesyonel ve güven veren bir dille yanıt vermek
+2. İşletmenin sektörünü, ölçeğini ve mevcut dijital altyapısını anlamak
+3. Dört ana hizmetten hangisine ihtiyaç olduğunu tespit etmek (Meta BM / Web / CRM / AI Çalışan)
+4. Uygun olduğunda "Tam Dijital Dönüşüm Paketi"ni önermek
+5. Bütçe aralığını ve deadline'ı toplamak
+6. Sektöre uygun referans projelerden bahsetmek (gydgrup.com.tr, temelliarsa.com, autotube.vip vb.)
+7. Somut fiyat aralığı vermek (Meta BM 7.5-30K, Web 20-75K, CRM 15-75K, AI 25K+, Tam Paket 75-200K)
+8. Net aksiyon önermek (görüşme, WhatsApp, teklif formu)
 
-Cevaplarında:
-- Kısa ve net ol (max 3-4 cümle)
-- Samimi ama profesyonel ol
-- Mümkün olduğunda somut rakamlar ve veriler kullan
-- Yatırım potansiyeli vurgula
-- Sonunda mutlaka aksiyon öner (görüşme, yer gösterme, portföy gönderme)
+İletişim: +90 545 278 80 73 (telefon ve WhatsApp), info@vexabiz.com. Danışman, görüşme, fiyat veya teklif isteyen ziyaretçiye bu numarayı ve sitedeki iletişim formunu paylaş.
 
-Handoff: Eğer müşteri "danışman", "görüşme", "arayın", "insan" gibi kelimeler kullanırsa veya tapu/hukuki konu konuşuluyorsa, "Sizi hemen bir danışmanımıza yönlendiriyorum" de ve bildirim oluştur.`;
+Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut rakamlar kullan, sonunda aksiyon öner.`;
 
-const WELCOME = `Merhaba 👋 GYD Grup'a hoş geldiniz! Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı konusunda 15+ yıllık tecrübemizle hizmetinizdeyiz. Size nasıl yardımcı olabilirim? İmarlı arsa almak mı, satmak mı, yoksa yatırım danışmanlığı mı istiyorsunuz?`;
+const WELCOME = `Merhaba 👋 Vexabiz Digital'a hoş geldiniz! Türkiye genelinde KOBİ ve işletmelere Meta Business Manager kurulumu, kurumsal web sitesi, CRM ve yapay zeka çalışanı geliştirme hizmetleri sunuyoruz.\n\nHangi hizmetimiz hakkında bilgi almak istersiniz?`;
 
-const HANDOFF_KEYWORDS = ['danışman', 'danisman', 'insan', 'kişi', 'arayın', 'arayin', 'telefon', 'görüşme', 'gorisme', 'görüşelim', 'goruseylim'];
+const HANDOFF_KEYWORDS = ['danışman', 'danisman', 'insan', 'kişi', 'arayın', 'arayin', 'telefon', 'görüşme', 'gorisme', 'görüşelim', 'goruseylim', 'fiyat', 'teklif', 'sözleşme'];
 
 function detectIntent(message) {
   const m = message.toLowerCase();
   if (HANDOFF_KEYWORDS.some((k) => m.includes(k))) return 'handoff';
-  if (/(satmak|satıyorum|satış|satmak istiyorum|satacağım)/.test(m)) return 'seller';
-  if (/(almak|arıyorum|alıcı|bakıyorum|almak istiyorum|alabilir miyim|bakmak istiyorum|yer gösterme)/.test(m)) return 'buyer';
-  if (/(yatırım|yatirim|getiri|potansiyel|değer artışı)/.test(m)) return 'invest';
+  if (/(meta|facebook|instagram|business manager|pixel|capi|reklam|ads)/.test(m)) return 'meta';
+  if (/(web|site|web sitesi|kurumsal|e-ticaret|eticaret|seo|landing|wordpress|shopify|next\.js)/.test(m)) return 'web';
   return 'general';
 }
 
 function suggestionsFor(intent) {
   switch (intent) {
-    case 'buyer': return ['Bütçem 2-3 milyon', '1.000-2.000 m² arası', 'Yer gösterme istiyorum', 'Fiyat teklifi al'];
-    case 'seller': return ['2 dönüm tarla', 'Tapu durumunu sormak', 'Yerinde değerleme', 'Danışman görüşmesi'];
-    case 'invest': return ['Bölge analizi', 'Yıllık getiri', 'Portföy önerisi', 'Sunum istiyorum'];
+    case 'meta': return ['Meta BM kurulumu kaç gün sürer?', 'Pixel + CAPI kurulumu dahil mi?', 'Sosyal medya yönetimi de yapıyor musunuz?', 'Fiyat teklifi al'];
+    case 'web': return ['Hangi teknolojileri kullanıyorsunuz?', 'SEO dahil mi?', 'E-ticaret de yapıyor musunuz?', 'Fiyat teklifi al'];
     case 'handoff': return [];
-    default: return ['Arsa almak istiyorum', 'Arsa satmak istiyorum', 'Yatırım danışmanlığı', 'Fiyat teklifi al'];
+    default: return ['Meta Business Manager', 'Kurumsal web sitesi', 'Fiyat teklifi al'];
   }
 }
 
@@ -184,10 +181,9 @@ function registerMiddleware(server) {
           if (!apiKey) {
             // Demo fallback
             const demos = {
-              buyer: `Merhaba! Arsa almak istemenize sevindim. Bütçeniz yaklaşık ne kadar, hangi bölgeyi düşünüyorsunuz? Size uygun seçenekleri hemen hazırlayalım.`,
-              seller: `Arsanızı satmak için doğru adrestesiniz. Tapu ve imar bilgileriniz hazırsa, ücretsiz değerleme için sizi danışmanımıza yönlendirebilirim.`,
-              invest: `Ankara'da imarlı arsa son 3 yılda %35'e varan oranlarda değer kazandı. Yatırım hedefinize göre size özel bir portföy hazırlayabilirim — bütçeniz ne kadar?`,
-              handoff: `Tabii, sizi hemen bir danışmanımıza yönlendiriyorum. 0532 489 25 67 numaramızdan da arayabilirsiniz.`,
+              meta: `Meta Business Manager kurulumumuz 3-7 günde tamamlanır ve şunları içerir: işletme hesabı + BM doğrulama, sayfa ve reklam hesabı kurulumu, Meta Pixel + CAPI kurulumu, GA4 ölçüm olayları eşlemesi. Kurulum 7.500 TL'den başlıyor. Ücretsiz keşif için teklif formumuzu doldurabilirsiniz.`,
+              web: `Kurumsal web sitenizi 15-30 günde teslim ediyoruz. SEO altyapısı, mobil uyumlu tasarım, hızlı yayın ve CMS dahil. Kurulum 20.000 TL'den başlıyor. Sektörünüze göre örnek çalışmalarımızı göstermek ister misiniz?`,
+              handoff: `Tabii, sizi hemen danışmanımıza yönlendiriyorum. 0545 278 80 73 numaramızdan arayabilir veya WhatsApp'tan yazabilirsiniz. İletişim formumuzu da doldurabilirsiniz.`,
               general: `${WELCOME}`,
             };
             reply = demos[intent] || demos.general;

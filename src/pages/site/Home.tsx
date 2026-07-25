@@ -1,74 +1,45 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, Award, TrendingUp, Users, Map, Sparkles, Building2, HandshakeIcon, Bot } from 'lucide-react';
+import {
+  Zap, Target, CheckCircle2, ArrowRight, ExternalLink,
+  ShieldCheck, Award, HandshakeIcon, Sparkles, Bot,
+} from 'lucide-react';
 import { Hero3D } from '@/components/three/Hero3D';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
-import { SERVICES, STATS, REGIONS, COMPANY } from '@/lib/constants';
-import { formatPrice, formatArea } from '@/lib/utils';
-import { pb, getFileUrl } from '@/lib/pb';
+import { SERVICES, STATS, REFERENCES, VALUE_PROPS, COMPANY } from '@/lib/constants';
+import {
+  Facebook, Globe, Users, Bot as BotIcon, Rocket,
+} from 'lucide-react';
 
-interface FeaturedListing {
-  id: string;
-  collectionId: string;
-  slug: string;
-  title: string;
-  price: number;
-  currency: string;
-  area_m2: number;
-  region: string;
-  photos: string[];
-}
-
-const FALLBACK_FEATURED: { id: string; title: string; price: number; area: number; region: string; tag: string }[] = [
-  { id: 'f1', title: 'Temelli Merkez · 1.250 m² İmarlı Konut Arsası', price: 2400000, area: 1250, region: 'Temelli', tag: 'Yeni' },
-  { id: 'f2', title: 'Polatlı Yolu Üzeri · 980 m² Konut İmarlı', price: 1850000, area: 980, region: 'Polatlı', tag: 'Fırsat' },
-  { id: 'f3', title: 'Sincan Sanayi Yanı · 1.640 m² Yatırımlık', price: 3100000, area: 1640, region: 'Sincan', tag: 'Popüler' },
-];
+const ICON_MAP: Record<string, typeof Facebook> = {
+  Facebook, Globe, Users, Bot: BotIcon, Rocket,
+};
 
 const WHY = [
-  { icon: ShieldCheck, title: 'Güvenli Süreç', desc: 'Tapu, imar ve hukuki kontrolleri sizin adınıza yönetiyoruz.' },
-  { icon: Award, title: '15+ Yıl Tecrübe', desc: 'Temelli bölgesinde derin yerel bilgi ve güçlü portföy.' },
-  { icon: TrendingUp, title: 'Değer Artışı Odaklı', desc: 'Yatırımınızın uzun vadeli değer kazanmasını sağlıyoruz.' },
-  { icon: HandshakeIcon, title: 'Şeffaf Komisyon', desc: 'Gizli ücret yok, her adım net ve yazılı sözleşmeli.' },
+  { icon: ShieldCheck, title: 'KVKK Uyumlu', desc: 'Tüm süreçlerimiz Kişisel Verilerin Korunması mevzuatına uygun yürütülür.' },
+  { icon: Award, title: '5+ Yıl Tecrübe', desc: 'Sektörde 30+ tamamlanan proje, farklı ölçeklerde 25+ aktif müşteri.' },
+  { icon: HandshakeIcon, title: 'Tek Elden, Uçtan Uca', desc: 'Meta + Web tek sözleşmeyle. Dağınık ajanslarla uğraşmayın.' },
+  { icon: Sparkles, title: 'AI Destekli Operasyon', desc: 'Sadece kurulum değil; ölçüm, otomasyon ve sürekli optimizasyon.' },
 ];
 
-const fadeIn = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
+const FADE = { initial: { opacity: 0, y: 20 }, whileInView: { opacity: 1, y: 0 }, viewport: { once: true }, transition: { duration: 0.6 } };
 
 export default function Home() {
-  const [featured, setFeatured] = useState<FeaturedListing[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  const [currentRef, setCurrentRef] = useState(0);
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const { items } = await pb.collection('listings').getList<FeaturedListing>(1, 4, {
-          filter: 'published = true',
-          sort: '-featured,-created',
-        });
-        if (!cancelled) setFeatured(items);
-      } catch {
-        // Hata olursa boş bırak, fallback gösterilir
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => { cancelled = true; };
+    const t = setInterval(() => setCurrentRef((c) => (c + 1) % REFERENCES.length), 4500);
+    return () => clearInterval(t);
   }, []);
-
-  const showFallback = !loading && featured.length === 0;
-  const featuredToShow = featured.length > 0 ? featured : (showFallback ? FALLBACK_FEATURED : []);
 
   return (
     <>
       <Hero3D />
 
-      {/* DİJİTAL DÖNÜŞÜM BANNER */}
       <section className="container-wide pt-10 sm:pt-14">
         <motion.div
-          {...fadeIn}
+          {...FADE}
           className="relative overflow-hidden rounded-2xl border border-accent/20 bg-gradient-to-r from-primary/80 via-primary/60 to-primary/80 p-5 sm:p-6"
         >
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_50%,rgba(212,168,43,0.18),transparent_55%)]" />
@@ -83,126 +54,147 @@ export default function Home() {
                 <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">Yeni</span>
               </div>
               <p className="font-display text-base leading-relaxed text-foreground sm:text-lg">
-                Dijital dönüşümümüz tamamlandı, <span className="gold-text italic">Yapay Zeka Çalışanlarımızla</span> hizmet vermeye devam ediyoruz.
+                <span className="gold-text italic">Hemen olsun istemez misiniz?</span> Doğru olsun istemez misiniz? 1 kerede tam olsun ister misiniz?
               </p>
             </div>
           </div>
         </motion.div>
       </section>
 
-      {/* SERVİSLER */}
       <section className="container-wide py-32">
-        <motion.div {...fadeIn} className="mb-16 text-center">
+        <motion.div {...FADE} className="mb-16 text-center">
           <Badge variant="gold" className="mb-4">Hizmetlerimiz</Badge>
           <h2 className="font-display text-4xl font-medium tracking-tight sm:text-5xl">
-            Her adımda <span className="gold-text italic">yanınızdayız</span>
+            İşletmeniz için <span className="gold-text italic">uçtan uca dijital</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-foreground/60">
-            Arsa alım-satımından tapu işlemlerine, yatırım danışmanlığından hukuki süreç yönetimine kadar uçtan uca çözüm.
+            Meta Business Manager kurulumundan kurumsal web sitesine — 1 kerede tam.
           </p>
         </motion.div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {SERVICES.map((s, i) => (
-            <motion.div
-              key={s.id}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {SERVICES.slice(0, 6).map((s, i) => {
+            const Icon = ICON_MAP[s.icon] || Globe;
+            return (
+              <motion.div
+                key={s.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="group"
+              >
+                <Link
+                  to={`/hizmetler/${s.slug}`}
+                  className="block h-full rounded-2xl border border-white/[0.06] bg-card/40 p-6 backdrop-blur-sm transition-all hover:border-accent/40 hover:shadow-xl hover:shadow-accent/10"
+                >
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <h3 className="font-display text-xl font-semibold text-foreground">{s.title}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-foreground/60">{s.short}</p>
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-sm text-accent">
+                    Detay <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </Link>
+              </motion.div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="relative container-wide py-32">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+        <motion.div {...FADE} className="mb-12 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <Badge variant="outline" className="mb-4">Referanslarımız</Badge>
+            <h2 className="font-display text-4xl font-medium tracking-tight sm:text-5xl">
+              Tamamlanan <span className="gold-text italic">projeler</span>
+            </h2>
+          </div>
+          <Link to="/referanslar" className="group inline-flex items-center gap-1.5 text-sm text-accent hover:gap-3 transition-all">
+            Tümünü Gör <ArrowRight className="h-4 w-4" />
+          </Link>
+        </motion.div>
+
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {REFERENCES.map((r, i) => (
+            <motion.a
+              key={r.id}
+              href={r.url}
+              target="_blank"
+              rel="noreferrer"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: i * 0.1 }}
-              className="group gradient-border p-6 transition-transform hover:-translate-y-1"
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              className={`group flex flex-col overflow-hidden rounded-2xl border bg-card/40 backdrop-blur-sm transition-all hover:border-accent/40 hover:shadow-xl hover:shadow-accent/10 ${
+                i === currentRef ? 'border-accent/60 ring-1 ring-accent/20' : 'border-white/[0.06]'
+              }`}
             >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-accent/10 text-accent transition-colors group-hover:bg-accent group-hover:text-accent-foreground">
-                {s.icon === 'TrendingUp' && <TrendingUp className="h-5 w-5" />}
-                {s.icon === 'Search' && <Map className="h-5 w-5" />}
-                {s.icon === 'LineChart' && <Sparkles className="h-5 w-5" />}
-                {s.icon === 'ShieldCheck' && <ShieldCheck className="h-5 w-5" />}
+              <div className="relative flex h-40 items-center justify-center bg-gradient-to-br from-primary/50 via-primary/30 to-accent/15">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(212,168,43,0.2),transparent_60%)]" />
+                <div className="font-display text-3xl font-bold gold-text">
+                  {r.title.split(' ').map((w) => w[0]).join('').slice(0, 3).toUpperCase()}
+                </div>
+                <div className="absolute right-3 top-3 rounded-md bg-background/60 px-2 py-1 text-[10px] font-semibold backdrop-blur-md">
+                  {r.year}
+                </div>
+                <div className="absolute left-3 top-3">
+                  <Badge variant="gold" className="text-[10px]">{r.tag}</Badge>
+                </div>
               </div>
-              <h3 className="font-display text-xl font-semibold text-foreground">{s.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-foreground/60">{s.desc}</p>
-            </motion.div>
+              <div className="flex flex-1 flex-col p-5">
+                <div className="text-xs uppercase tracking-wider text-accent">{r.industry}</div>
+                <h3 className="mt-1 font-display text-lg font-semibold text-foreground">{r.title}</h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-foreground/65 line-clamp-3">{r.description}</p>
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <ExternalLink className="h-3 w-3" /> {r.url.replace(/^https?:\/\//, '')}
+                </div>
+              </div>
+            </motion.a>
           ))}
         </div>
       </section>
 
-      {/* ÖNE ÇIKAN ARSALAR */}
-      <section className="relative container-wide py-32">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
-        <motion.div {...fadeIn} className="mb-12 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <Badge variant="outline" className="mb-4">Öne Çıkan Portföy</Badge>
-            <h2 className="font-display text-4xl font-medium tracking-tight sm:text-5xl">
-              Seçilmiş <span className="gold-text italic">fırsatlar</span>
-            </h2>
-          </div>
-          <Link to="/arsalar" className="group inline-flex items-center gap-1.5 text-sm text-accent hover:gap-3 transition-all">
-            Tüm Arsaları Gör <span>→</span>
-          </Link>
+      <section className="container-wide py-32">
+        <motion.div {...FADE} className="mb-16 text-center">
+          <Badge variant="gold" className="mb-4">Neden Vexabiz?</Badge>
+          <h2 className="font-display text-4xl font-medium tracking-tight sm:text-5xl">
+            Üç <span className="gold-text italic">sözümüz</span>
+          </h2>
         </motion.div>
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {featuredToShow.length === 0 ? (
-            <div className="col-span-full rounded-xl border border-white/[0.06] bg-card/40 p-12 text-center text-sm text-muted-foreground">
-              Henüz öne çıkan arsa eklenmemiş. Admin panelden <code className="rounded bg-white/5 px-1.5 py-0.5">featured=true</code> olarak işaretleyin.
-            </div>
-          ) : (
-            featuredToShow.map((l, i) => {
-              const isFallback = !('collectionId' in l);
-              const url = !isFallback && l.photos && l.photos.length > 0
-                ? getFileUrl({ collectionId: l.collectionId, id: l.id }, l.photos[0])
-                : null;
-              return (
-                <motion.div
-                  key={l.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: i * 0.08 }}
-                  className="group overflow-hidden rounded-xl border border-white/[0.06] bg-card/40 backdrop-blur-sm transition-all hover:border-accent/30 hover:shadow-xl hover:shadow-accent/10"
-                >
-                  <Link to={`/arsalar/${('slug' in l && l.slug) || ''}`} className="block">
-                    <div className="relative h-48 overflow-hidden bg-gradient-to-br from-primary/40 to-accent/20">
-                      {url ? (
-                        <img src={url} alt={l.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                      ) : (
-                        <>
-                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(0,212,170,0.4),transparent_60%)]" />
-                          <div className="absolute inset-0 flex items-center justify-center text-foreground/30">
-                            <Building2 className="h-12 w-12" />
-                          </div>
-                        </>
-                      )}
-                      {('tag' in l) && l.tag && <Badge className="absolute left-3 top-3" variant="gold">{l.tag}</Badge>}
-                    </div>
-                    <div className="p-4">
-                      <div className="mb-1 text-xs uppercase tracking-wider text-accent">{l.region}</div>
-                      <h3 className="line-clamp-1 font-display text-lg font-semibold text-foreground">{l.title}</h3>
-                      <div className="mt-3 flex items-end justify-between border-t border-white/[0.06] pt-3">
-                        <div>
-                          <div className="text-xs text-muted-foreground">{formatArea(l.area_m2 ?? l.area)}</div>
-                          <div className="font-display text-lg font-semibold text-foreground">{formatPrice(l.price, (('currency' in l && l.currency as 'TRY' | 'USD') || 'TRY'))}</div>
-                        </div>
-                        <span className="text-xs text-accent opacity-0 transition-opacity group-hover:opacity-100">Detay →</span>
-                      </div>
-                    </div>
-                  </Link>
-                </motion.div>
-              );
-            })
-          )}
+        <div className="grid gap-6 md:grid-cols-3">
+          {VALUE_PROPS.map((vp, i) => {
+            const Icon = i === 0 ? Zap : i === 1 ? Target : CheckCircle2;
+            return (
+              <motion.div
+                key={vp.title}
+                {...FADE}
+                transition={{ duration: 0.5, delay: i * 0.1 }}
+                className="group rounded-2xl border border-white/[0.06] bg-card/40 p-7 backdrop-blur-sm transition-all hover:border-accent/40"
+              >
+                <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 text-accent">
+                  <Icon className="h-6 w-6" />
+                </div>
+                <h3 className="font-display text-2xl font-semibold">{vp.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-foreground/70">{vp.desc}</p>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 
-      {/* NEDEN GYD */}
       <section className="container-wide py-32">
         <div className="grid items-center gap-16 lg:grid-cols-2">
-          <motion.div {...fadeIn}>
-            <Badge variant="gold" className="mb-4">Neden GYD Grup?</Badge>
+          <motion.div {...FADE}>
+            <Badge variant="gold" className="mb-4">Neden Bizi Seçmelisiniz?</Badge>
             <h2 className="font-display text-4xl font-medium leading-tight tracking-tight sm:text-5xl">
-              Ankara'da <span className="gold-text italic">güvenilir</span> imarlı arsa adresi
+              Teknoloji <span className="gold-text italic">+ strateji</span> + uygulama
             </h2>
             <p className="mt-6 text-foreground/70 leading-relaxed">
-              GYD Grup, sadece bir arsa bulma platformu değil; her müşterisine özel yatırım stratejisi, hukuki güvence ve uzun vadeli değer artışı sunan, <strong>imarlı arsa</strong> odaklı bir danışmanlık şirketidir.
+              Vexabiz, sadece bir dijital ajans değil; işletmenizin büyümesini hızlandıran uçtan uca bir dönüşüm ortağı. Stratejiden kuruluma, ölçümden optimizasyona.
             </p>
             <div className="mt-10 space-y-5">
               {WHY.map((w, i) => (
@@ -226,15 +218,15 @@ export default function Home() {
             </div>
           </motion.div>
 
-          <motion.div {...fadeIn} className="relative">
+          <motion.div {...FADE} className="relative">
             <div className="absolute -inset-8 rounded-3xl bg-accent/10 blur-3xl" />
-            <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="relative grid grid-cols-2 gap-4">
               {STATS.map((s, i) => (
                 <div
                   key={s.label}
-                  className={`rounded-xl border border-white/[0.08] bg-card/60 p-6 backdrop-blur-md ${i % 2 ? 'sm:mt-8 lg:mt-0' : ''}`}
+                  className={`rounded-xl border border-white/[0.08] bg-card/60 p-6 backdrop-blur-md ${i % 2 ? 'sm:mt-8' : ''}`}
                 >
-                  <div className="font-display text-4xl font-semibold gold-text">{s.value}</div>
+                  <div className="font-display text-3xl font-semibold gold-text sm:text-4xl">{s.value}</div>
                   <div className="mt-2 text-xs uppercase tracking-wider text-muted-foreground">{s.label}</div>
                 </div>
               ))}
@@ -243,57 +235,20 @@ export default function Home() {
         </div>
       </section>
 
-      {/* BÖLGELER */}
-      <section className="container-wide py-32">
-        <motion.div {...fadeIn} className="mb-12 text-center">
-          <Badge variant="outline" className="mb-4">Bölgeler</Badge>
-          <h2 className="font-display text-4xl font-medium tracking-tight sm:text-5xl">
-            Uzmanı olduğumuz <span className="gold-text italic">bölgeler</span>
-          </h2>
-        </motion.div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {REGIONS.map((r, i) => (
-            <motion.div
-              key={r.slug}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.06 }}
-            >
-              <Link
-                to={`/bolgeler/${r.slug}`}
-                className="group flex items-center justify-between rounded-xl border border-white/[0.06] bg-card/40 p-5 backdrop-blur-sm transition-all hover:border-accent/40 hover:bg-card/80"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-display text-2xl font-semibold text-foreground">{r.name}</h3>
-                    {r.highlight && <Badge variant="gold" className="text-[10px]">Uzman</Badge>}
-                  </div>
-                  <div className="mt-1 text-sm text-muted-foreground">{r.district} · Ankara</div>
-                </div>
-                <div className="text-2xl text-foreground/30 transition-all group-hover:translate-x-1 group-hover:text-accent">→</div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
       <section className="container-wide py-32">
         <div className="gradient-border relative overflow-hidden p-12 text-center sm:p-16">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(0,212,170,0.18),transparent_60%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,168,43,0.18),transparent_60%)]" />
           <div className="relative">
-            <Badge variant="gold" className="mb-4">Ücretsiz Danışmanlık</Badge>
+            <Badge variant="gold" className="mb-4">Ücretsiz Keşif Görüşmesi</Badge>
             <h2 className="mx-auto max-w-3xl font-display text-4xl font-medium leading-tight tracking-tight sm:text-5xl">
-              Yatırım yolculuğunuza <span className="gold-text italic">bugün</span> başlayın
+              Dijital dönüşümünüze <span className="gold-text italic">bugün</span> başlayın
             </h2>
             <p className="mx-auto mt-4 max-w-xl text-foreground/70">
-              15 dakikalık bir görüşmeyle bütçenize ve hedefinize en uygun arsa seçeneklerini birlikte değerlendirelim.
+              30 dakikalık görüşmeyle işletmenizin ihtiyacını anlayıp size özel yol haritası çıkaralım.
             </p>
             <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
               <Button variant="gold" size="lg" onClick={() => (window.location.href = '/iletisim')}>
-                Randevu Talep Et
+                Görüşme Talep Et
               </Button>
               <a
                 href={COMPANY.whatsapp}

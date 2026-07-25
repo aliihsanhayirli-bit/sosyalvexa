@@ -1,6 +1,6 @@
-# GYD Grup — Dokümantasyon
+# Vexabiz Digital — Dokümantasyon
 
-> **GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ.** — Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı.
+> **Vexabiz Dijital Danışmanlık ve Yazılım Ltd. Şti.** — Türkiye genelinde KOBİ ve işletmelere **Meta Business Manager kurulumu**, **kurumsal web sitesi**, **CRM** ve **yapay zeka çalışanı** geliştirme hizmetleri.
 
 | Doküman | İçerik |
 |---|---|
@@ -9,15 +9,15 @@
 | [META-SETUP.md](META-SETUP.md) | WhatsApp / Messenger / Instagram bağlama |
 | [RAG.md](RAG.md) | RAG pipeline, embedding, retrieval |
 | [CRM.md](CRM.md) | Mini CRM kullanım kılavuzu (kanban, kişi kartı, lead) |
-| [STAGING.md](STAGING.md) | Staging build & `/gyd-staging/` test ortamı |
+| [STAGING.md](STAGING.md) | Staging build & test ortamı |
 | [HEMEN-TEST.md](HEMEN-TEST.md) | 1 saatlik canlı demo (tarihsel, güncel değil) |
 
 ## Hızlı bağlantılar
 
 | Servis | URL |
 |---|---|
-| Site (prod) | https://www.gydgrup.com.tr |
-| Admin Panel | https://www.gydgrup.com.tr/admin |
+| Site (prod) | https://sos.vexabiz.com |
+| Admin Panel | https://sos.vexabiz.com/admin |
 | PocketBase Admin | http://127.0.0.1:8090/_/ (VPS'te internal) |
 | PocketBase REST | http://127.0.0.1:8090/api/ |
 | API (chat, RAG, webhook) | http://127.0.0.1:8091 (VPS'te internal) |
@@ -28,10 +28,11 @@ Tüm UI ve dökümanlarda geçen şirket bilgisi `src/lib/constants.ts → COMPA
 
 | Alan | Değer |
 |---|---|
-| Ünvan | GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ. |
-| Kısa | GYD Grup |
-| Telefon / WhatsApp | +90 532 489 25 67 |
-| E-posta | info@gydgrup.com.tr |
-| Domain | gydgrup.com.tr (canonical: **www**) |
-| Kapsam | Ankara geneli · sadece imarlı arsa |
-| Meta App | `gydgrup` (App ID `1721626692079061`) |
+| Ünvan | Vexabiz Dijital Danışmanlık ve Yazılım Ltd. Şti. |
+| Kısa | Vexabiz Digital |
+| Slogan | Hemen olsun istemez misiniz? Doğru olsun istemez misiniz? 1 kerede tam olsun ister misiniz? |
+| Telefon / WhatsApp | +90 545 278 80 73 |
+| E-posta | info@vexabiz.com |
+| Domain | sos.vexabiz.com (parent: vexabiz.com) |
+| Kapsam | Türkiye geneli · KOBİ ve işletmeler · dijital dönüşüm |
+| Meta App | `vexabiz` |

@@ -4,19 +4,16 @@ import SiteLayout from '@/components/layout/SiteLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
 
 const Home = lazy(() => import('@/pages/site/Home'));
-const Listings = lazy(() => import('@/pages/site/Listings'));
-const ListingDetail = lazy(() => import('@/pages/site/ListingDetail'));
 const About = lazy(() => import('@/pages/site/About'));
 const Services = lazy(() => import('@/pages/site/Services'));
-const Regions = lazy(() => import('@/pages/site/Regions'));
-const RegionDetail = lazy(() => import('@/pages/site/RegionDetail'));
+const ServiceDetail = lazy(() => import('@/pages/site/ServiceDetail'));
+const Packages = lazy(() => import('@/pages/site/Packages'));
+const References = lazy(() => import('@/pages/site/References'));
 const Contact = lazy(() => import('@/pages/site/Contact'));
 const KVKK = lazy(() => import('@/pages/site/KVKK'));
 
 const AdminLogin = lazy(() => import('@/pages/admin/Login'));
 const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
-const AdminListings = lazy(() => import('@/pages/admin/Listings'));
-const AdminListingEdit = lazy(() => import('@/pages/admin/ListingEdit'));
 const AdminContacts = lazy(() => import('@/pages/admin/Contacts'));
 const AdminContactDetail = lazy(() => import('@/pages/admin/ContactDetail'));
 const AdminConversations = lazy(() => import('@/pages/admin/Conversations'));
@@ -40,12 +37,11 @@ export default function App() {
       <Routes>
         <Route element={<SiteLayout />}>
           <Route path="/" element={<Home />} />
-          <Route path="/arsalar" element={<Listings />} />
-          <Route path="/arsalar/:slug" element={<ListingDetail />} />
           <Route path="/hakkimizda" element={<About />} />
           <Route path="/hizmetler" element={<Services />} />
-          <Route path="/bolgeler" element={<Regions />} />
-          <Route path="/bolgeler/:slug" element={<RegionDetail />} />
+          <Route path="/hizmetler/:slug" element={<ServiceDetail />} />
+          <Route path="/paketler" element={<Packages />} />
+          <Route path="/referanslar" element={<References />} />
           <Route path="/iletisim" element={<Contact />} />
           <Route path="/kvkk" element={<KVKK />} />
         </Route>
@@ -53,9 +49,6 @@ export default function App() {
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
-          <Route path="arsalar" element={<AdminListings />} />
-          <Route path="arsalar/yeni" element={<AdminListingEdit />} />
-          <Route path="arsalar/:id" element={<AdminListingEdit />} />
           <Route path="kisiler" element={<AdminContacts />} />
           <Route path="kisiler/:id" element={<AdminContactDetail />} />
           <Route path="konusmalar" element={<AdminConversations />} />

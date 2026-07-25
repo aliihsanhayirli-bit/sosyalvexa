@@ -1,6 +1,6 @@
 User-agent: *
 Allow: /
 Disallow: /admin
-Disallow: /api/
+Disallow: /api
 
-Sitemap: https://gydgrup.com.tr/sitemap.xml
+Sitemap: https://sos.vexabiz.com/sitemap.xml

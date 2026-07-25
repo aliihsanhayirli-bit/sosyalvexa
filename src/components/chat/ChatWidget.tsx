@@ -10,8 +10,12 @@ const INITIAL: Msg = {
   id: 'init',
   role: 'bot',
   ts: Date.now(),
-  content: `Merhaba, ben GYD Asistan 👋\n\n${COMPANY.brand} olarak Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı yapıyoruz. Size nasıl yardımcı olabilirim?`,
-  suggestions: ['Arsa satın almak istiyorum', 'Arsa satmak istiyorum', 'Yatırım danışmanlığı', 'Fiyat teklifi al'],
+  content: `Merhaba, ben Vexabiz Asistan 👋\n\n${COMPANY.brand} olarak Türkiye genelinde işletmelere **Meta Business Manager kurulumu** ve **kurumsal web sitesi** hizmetleri sunuyoruz.\n\nHangi hizmetimiz hakkında bilgi almak istersiniz?`,
+  suggestions: [
+    'Meta Business Manager kurulumu',
+    'Kurumsal web sitesi',
+    'Fiyat teklifi al',
+  ],
 };
 
 export function ChatWidget() {
@@ -124,7 +128,7 @@ export function ChatWidget() {
                 <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-card bg-emerald-500" />
               </div>
               <div className="flex-1">
-                <div className="text-sm font-semibold text-foreground">GYD Asistan</div>
+                <div className="text-sm font-semibold text-foreground">Vexabiz Asistan</div>
                 <div className="text-[11px] text-muted-foreground">Online · ortalama 1 dk yanıt</div>
               </div>
             </div>
@@ -193,7 +197,7 @@ export function ChatWidget() {
             </form>
 
             <div className="border-t border-white/[0.06] bg-white/[0.02] px-4 py-2 text-center text-[10px] text-muted-foreground/70">
-              Gemini AI · GYD Grup tarafından eğitildi
+              Gemini AI · Vexabiz tarafından eğitildi
             </div>
           </motion.div>
         )}

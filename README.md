@@ -1,6 +1,6 @@
-# GYD Grup — Premium 3D Web + CRM + Omnichannel Bot
+# Vexabiz Digital — Premium 3D Web + CRM + Omnichannel Bot
 
-> Ankara genelinde **imarlı arsa** alım-satımı, proje geliştirme ve yatırım danışmanlığı yapan **GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ.** için geliştirilmiş, 3D lüks web sitesi, mini CRM ve çok kanallı (Web / WhatsApp / Messenger / Instagram) yapay zekâ destekli müşteri asistanı.
+> **Vexabiz Dijital Danışmanlık ve Yazılım Ltd. Şti.** için geliştirilmiş, 3D lüks web sitesi, mini CRM ve çok kanallı (Web / WhatsApp / Messenger / Instagram) yapay zekâ destekli dijital dönüşüm asistanı. **sos.vexabiz.com** alanında yayınlanır.
 
 ![Tech: Vite + React + Three.js + PocketBase + Gemini](https://img.shields.io/badge/stack-Vite%20%2B%20React%20%2B%20Three.js%20%2B%20PocketBase%20%2B%20Gemini-blue)
 
@@ -9,17 +9,19 @@
 ## ✨ Özellikler
 
 ### Müşteri Yüzü (`/`)
-- **3D Hero Sahnesi** — Ankara topografik haritası, parseller, otomatik kamera orbit, postprocessing (bloom + vignette), mobile fallback
-- **Anasayfa** — Öne çıkan imarlı arsalar, hizmetler, istatistikler, bölgeler, CTA
-- **Arsa Portföyü** — Grid/harita görünümü, filtre (bölge, fiyat, alan), sıralama
-- **Arsa Detay** — Galeri, harita, özellikler, iletişim CTA
-- **Bölgeler** — 9 bölge için SEO sayfaları (Ankara geneli)
-- **İletişim** — Form, telefon, WhatsApp, e-posta, harita
-- **Yüzen Chat Widget** — Gemini AI, RAG, alıcı/satıcı ayrımı, intent tespiti, danışmana devir
+- **3D Hero Sahnesi** — 3D ofis simülasyonu (laptop, monitör, telefonlar, CRM paneli, network connections), postprocessing, mobile fallback
+- **Slogan**: "Hemen olsun istemez misiniz? Doğru olsun istemez misiniz? 1 kerede tam olsun ister misiniz?"
+- **Anasayfa** — Öne çıkan hizmetler, 5 referans proje (sosyal kanıt), 3 değer önerisi (Hemen / Doğru / Tam), istatistikler, CTA
+- **Hizmetler** — Meta BM Kurulumu · Kurumsal Web Sitesi · CRM Kurulumu · Yapay Zeka Çalışanı + Tam Dijital Dönüşüm paketi
+- **Hizmet Detay** — Her hizmet için ayrı slug sayfa, fiyat + süre + kapsam
+- **Paketler** — 3 fiyat paketi (Başlangıç / Profesyonel / Kurumsal), detaylı fiyat karşılaştırma tablosu
+- **Referanslar** — 5 tamamlanan proje (gydgrup.com.tr, temelliarsa.com, autotube.vip, vb.)
+- **Hakkımızda** — Hikâye, değerler, zaman çizelgesi, ekip
+- **İletişim** — Form, telefon, WhatsApp, e-posta
+- **Yüzen Chat Widget** — Gemini AI, RAG, intent tespiti, danışmana devir
 
 ### Yönetim Paneli (`/admin`)
-- **Dashboard** — KPI, ziyaret/mesaj trendi, kanal dağılımı, pipeline grafiği
-- **Arsa CRUD** — Çoklu fotoğraf yükleme, imar/tapu, fiyat, konum
+- **Dashboard** — KPI, lead trendi, kanal dağılımı, pipeline grafiği
 - **CRM · Kişiler** — Dikey Kanban + Liste, drag-drop, alıcı/satıcı filtre, kanal bazlı
 - **Kişi Kartı** — Konuşma, timeline, konum fotoğrafı gönderme, durum değiştirme, notlar
 - **Konuşmalar** — Aktif oturumlar, bot/devral, kanal filtre
@@ -40,7 +42,7 @@
 
 ### Gereksinimler
 - Node.js ≥ 20
-- PocketBase binary (depoda `backend/pocketbase.exe` mevcut, Linux/macOS için [indirin](https://github.com/pocketbase/pocketbase/releases))
+- PocketBase binary (depoda `backend/pocketbase` mevcut, Linux/macOS için [indirin](https://github.com/pocketbase/pocketbase/releases))
 
 ### Kurulum (3 adım)
 
@@ -50,7 +52,7 @@ npm install
 
 # 2) İlk admin hesabını oluştur (sadece bir kez)
 cd backend
-./pocketbase.exe admin create admin@gydgrup.com.tr "GüçlüŞifre!"
+./pocketbase admin create admin@vexabiz.com "GucluSifre2026!"
 cd ..
 
 # 3) Hem PocketBase hem Vite'ı başlat
@@ -69,7 +71,7 @@ dev.bat
 | PocketBase Admin UI | http://localhost:8090/_/ |
 | PocketBase REST API | http://localhost:8090/api/ |
 
-**Admin paneline giriş:** `admin@gydgrup.com.tr` / oluşturduğunuz şifre
+**Admin paneline giriş:** `admin@vexabiz.com` / oluşturduğunuz şifre
 
 ---
 
@@ -85,7 +87,7 @@ cp .env.example .env
 VITE_POCKETBASE_URL=http://127.0.0.1:8090
 VITE_GEMINI_API_KEY=AIza...           # https://aistudio.google.com
 VITE_GEMINI_MODEL=gemini-1.5-flash
-VITE_WHATSAPP_NUMBER=905324892567
+VITE_WHATSAPP_NUMBER=905452788073
 VITE_SITE_URL=http://localhost:5173
 ```
 
@@ -96,25 +98,25 @@ VITE_SITE_URL=http://localhost:5173
 ## 📁 Proje Yapısı
 
 ```
-gydgrup/
+vexabiz/
 ├── public/                 # Logo, statik dosyalar
 ├── src/
 │   ├── components/
 │   │   ├── ui/            # Button, Card, Form, Badge, Dialog
 │   │   ├── layout/        # SiteLayout, AdminLayout, Header, Footer
-│   │   ├── three/         # Hero3D (Three.js)
+│   │   ├── three/         # Hero3D (3D ofis — Three.js)
 │   │   └── chat/          # ChatWidget
 │   ├── pages/
-│   │   ├── site/          # Müşteri sayfaları
+│   │   ├── site/          # Müşteri sayfaları (Home, About, Services, ServiceDetail, Packages, References, Contact, KVKK)
 │   │   └── admin/         # Yönetim sayfaları
-│   ├── lib/               # pb, utils, constants
+│   ├── lib/               # pb, utils, constants ← şirket bilgileri
 │   ├── types/             # TS tipleri
 │   ├── styles/            # globals.css
 │   ├── App.tsx            # Router
 │   └── main.tsx           # Entry
 ├── backend/
-│   ├── pocketbase.exe     # Backend binary
-│   ├── pb_migrations/     # 8 collection migration
+│   ├── pocketbase         # Backend binary
+│   ├── pb_migrations/     # 17 collection migration
 │   ├── pb_hooks/          # mesajlar, contacts otomatik timeline
 │   └── pb_data/           # SQLite (git'e dahil değil)
 ├── vite/
@@ -152,10 +154,10 @@ gydgrup/
 |---|---|
 | Vercel (frontend) | **$0** (free tier) |
 | Oracle Cloud Free Tier (PocketBase, 4 vCPU/24GB kalıcı) | **$0** |
-| Domain (.com.tr) | ~₺600/yıl |
+| Domain (sos.vexabiz.com subdomain) | $0 (parent: vexabiz.com) |
 | SSL (Let's Encrypt) | $0 |
 | Gemini API (free tier) | $0 — 1500 istek/gün |
-| **Toplam** | **~₺50/ay** |
+| **Toplam** | **~$0/ay** |
 
 ---
 
@@ -165,7 +167,7 @@ gydgrup/
 - **[docs/DEPLOY.md](docs/DEPLOY.md)** — Production'a alma (Vercel + Oracle/Hetzner)
 - **[docs/META-SETUP.md](docs/META-SETUP.md)** — WhatsApp/Messenger/Instagram bağlama
 - **[docs/RAG.md](docs/RAG.md)** — RAG pipeline ve embedding yükleme
-- **[docs/CRM.md](docs/CRM.md)** — CRM kullanım kılavuzu
+- **[docs/CRM.md](docs/CRM.md)** — Mini CRM kullanım kılavuzu
 
 ---
 
@@ -177,4 +179,4 @@ gydgrup/
 
 ## 📜 Lisans
 
-© 2024 GYD GRUP GAYRİMENKUL PROJE VE DANIŞMANLIK LTD. ŞTİ. Tüm hakları saklıdır.
+© 2018-2026 Vexabiz Dijital Danışmanlık ve Yazılım Ltd. Şti. Tüm hakları saklıdır.

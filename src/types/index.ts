@@ -1,6 +1,6 @@
 export type Channel = 'web' | 'whatsapp' | 'facebook' | 'instagram';
 
-export type ContactType = 'buyer' | 'seller' | 'invest';
+export type ContactType = 'buyer' | 'seller' | 'invest' | 'other';
 
 export type ContactStatus =
   | 'new'
@@ -15,7 +15,7 @@ export const CONTACT_STATUSES: { id: ContactStatus; label: string; color: string
   { id: 'new', label: 'Yeni', color: 'bg-slate-500' },
   { id: 'contacted', label: 'İletişimde', color: 'bg-blue-500' },
   { id: 'qualified', label: 'Nitelikli', color: 'bg-cyan-500' },
-  { id: 'visit_scheduled', label: 'Yer Görüşmesi', color: 'bg-violet-500' },
+  { id: 'visit_scheduled', label: 'Toplantı Planlandı', color: 'bg-violet-500' },
   { id: 'offer', label: 'Teklif', color: 'bg-amber-500' },
   { id: 'won', label: 'Kazanıldı', color: 'bg-emerald-500' },
   { id: 'lost', label: 'Kaybedildi', color: 'bg-rose-500' },
@@ -28,26 +28,49 @@ export const CHANNELS: { id: Channel; label: string; color: string }[] = [
   { id: 'instagram', label: 'Instagram', color: 'bg-pink-500' },
 ];
 
-export interface Listing {
+export interface ServiceRecord {
   id: string;
   slug: string;
   title: string;
-  description?: string;
-  price: number;
-  currency: 'TRY' | 'USD';
-  area_m2: number;
-  imar_status?: string;
-  tapu_status?: string;
-  region: string;
-  city: string;
-  neighborhood?: string;
-  lat?: number;
-  lng?: number;
-  photos?: string[];
-  features?: Record<string, string>;
-  status: 'available' | 'reserved' | 'sold';
+  short: string;
+  desc: string;
+  icon: string;
+  bullets: string[];
+  price_from?: string;
+  duration?: string;
+  order: number;
   published: boolean;
-  featured?: boolean;
+  created: string;
+  updated: string;
+}
+
+export interface PackageRecord {
+  id: string;
+  slug: string;
+  name: string;
+  tagline: string;
+  setup: string;
+  monthly: string;
+  features: { label: string; included: boolean }[];
+  highlight: boolean;
+  cta: string;
+  order: number;
+  published: boolean;
+  created: string;
+  updated: string;
+}
+
+export interface ReferenceRecord {
+  id: string;
+  title: string;
+  url: string;
+  description: string;
+  tag: string;
+  year: string;
+  industry: string;
+  logo?: string;
+  order: number;
+  published: boolean;
   created: string;
   updated: string;
 }
@@ -63,12 +86,9 @@ export interface Contact {
   assigned_to?: string;
   tags?: string[];
   notes?: string;
-  interested_listing?: string;
+  interested_service?: string;
   budget_min?: number;
   budget_max?: number;
-  preferred_region?: string;
-  preferred_area_min?: number;
-  preferred_area_max?: number;
   external_id?: string;
   created: string;
   updated: string;
@@ -89,7 +109,7 @@ export interface Message {
   conversation: string;
   sender: 'bot' | 'customer' | 'agent' | 'system';
   content: string;
-  type: 'text' | 'photo' | 'listing' | 'location' | 'document';
+  type: 'text' | 'photo' | 'service' | 'location' | 'document';
   payload?: Record<string, unknown>;
   timestamp: string;
 }
@@ -97,7 +117,7 @@ export interface Message {
 export interface TimelineEvent {
   id: string;
   contact: string;
-  type: 'message' | 'status_change' | 'note' | 'photo_sent' | 'listing_shared' | 'created';
+  type: 'message' | 'status_change' | 'note' | 'photo_sent' | 'service_shared' | 'created';
   title?: string;
   description?: string;
   ref_id?: string;

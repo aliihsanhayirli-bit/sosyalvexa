@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Phone, Mail, MapPin, Facebook, Instagram, Youtube, MessageCircle } from 'lucide-react';
+import { Phone, Mail, MapPin, Facebook, Instagram, Linkedin, Youtube, MessageCircle } from 'lucide-react';
 import { COMPANY, NAV } from '@/lib/constants';
 
 export function Footer() {
@@ -9,11 +9,11 @@ export function Footer() {
         <div className="grid gap-10 lg:grid-cols-4">
           <div className="lg:col-span-2">
             <Link to="/" className="inline-flex items-center gap-3">
-              <img src="/logo.png" alt="GYD Grup" className="h-14 w-14 rounded-full ring-1 ring-white/10" />
+              <img src="/logo.png" alt={COMPANY.brand} className="h-14 w-14 rounded-full ring-1 ring-white/10" />
               <div>
                 <div className="font-display text-xl font-semibold text-foreground">{COMPANY.brand}</div>
                 <div className="mt-0.5 text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  {COMPANY.tagline}
+                  {COMPANY.shortTagline}
                 </div>
               </div>
             </Link>
@@ -36,6 +36,15 @@ export function Footer() {
                 aria-label="Facebook"
               >
                 <Facebook className="h-4 w-4" />
+              </a>
+              <a
+                href={COMPANY.social.linkedin}
+                target="_blank"
+                rel="noreferrer"
+                className="flex h-10 w-10 items-center justify-center rounded-full border border-white/10 text-foreground/70 transition-colors hover:border-accent/50 hover:text-accent"
+                aria-label="LinkedIn"
+              >
+                <Linkedin className="h-4 w-4" />
               </a>
               <a
                 href={COMPANY.social.youtube}

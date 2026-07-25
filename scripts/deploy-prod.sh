@@ -1,17 +1,26 @@
 #!/usr/bin/env bash
-# GYD GRUP — production deploy
-#   • Frontend build → /var/www/gydgrup/dist/
-#   • PB migrations/hooks → /opt/gyd-pocketbase/ (pb_data DOKUNULMAZ)
-#   • Restart: gyd-pocketbase + gyd-api, reload nginx
+# Vexabiz Digital — production deploy (sos.vexabiz.com)
+#   • Frontend build → /var/www/vexabiz-sos/dist/
+#   • PB hooks → /opt/vexabiz-pocketbase/pb_hooks/
+#   • PB migrations → /opt/vexabiz-pocketbase/pb_migrations/ + migrate up
+#   • Restart: vexabiz-pocketbase, reload nginx
+#
+# Not: seed bilinçli olarak burada YOK — pb_scripts/seed.js idempotent değil,
+# tekrar çalıştırmak services/packages/references kayıtlarını çiftler.
 #
 # Kullanım: scripts/deploy-prod.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PB_HOME="/opt/gyd-pocketbase"
-DIST_HOME="/var/www/gydgrup/dist"
+PB_HOME="/opt/vexabiz-pocketbase"
+DIST_HOME="/var/www/vexabiz-sos/dist"
+PB_URL="${PB_URL:-http://127.0.0.1:8096}"
 
-echo "▶ GYD prod deploy — $ROOT"
+echo "▶ Vexabiz prod deploy — $ROOT"
+
+if [ -f "$ROOT/.env" ]; then
+  set -a; . "$ROOT/.env"; set +a
+fi
 
 echo "  → build"
 npm run build
@@ -30,22 +39,22 @@ rsync -a --delete \
   --exclude='journal/' \
   "$ROOT/backend/pb_migrations/" "$PB_HOME/pb_migrations/"
 
-echo "  → reload nginx + restart gyd-pocketbase + gyd-api"
+echo "  → PB migrate up (servis kısa süre durur)"
+systemctl stop vexabiz-pocketbase
+"$PB_HOME/pocketbase" --dir "$PB_HOME/pb_data" --encryptionEnv=PB_ENCRYPTION_KEY migrate up
+systemctl start vexabiz-pocketbase
+
+echo "  → reload nginx"
 nginx -t >/dev/null
 systemctl reload nginx
-systemctl restart gyd-pocketbase gyd-api
 
-echo "  → seed (idempotent: 9 bölge + 9 arsa + 2 RAG + bot_settings)"
-# PB'nin tamamen ayağa kalkması için kısa bekleme
+echo "  → health check"
 for i in 1 2 3 4 5; do
-  if curl -s -o /dev/null -w "%{http_code}" "${PB_URL:-http://127.0.0.1:8090}/api/health" 2>/dev/null | grep -q 200; then
+  if curl -s -o /dev/null -w "%{http_code}" "$PB_URL/api/health" 2>/dev/null | grep -q 200; then
+    echo "  ✓ PocketBase sağlıklı ($PB_URL)"
     break
   fi
   sleep 1
 done
-if [ -f "$ROOT/.env" ]; then
-  set -a; . "$ROOT/.env"; set +a
-fi
-node "$ROOT/scripts/seed-prod.mjs" 2>&1 | sed 's/^/    /'
 
-echo "✓ GYD prod deploy tamam."
+echo "✓ Vexabiz prod deploy tamam."

@@ -32,12 +32,12 @@ export function Header() {
         <Link to="/" className="group flex items-center gap-3">
           <div className="relative">
             <div className="absolute -inset-1 rounded-full bg-accent/20 blur-md opacity-0 transition-opacity group-hover:opacity-100" />
-            <img src="/logo.png" alt="GYD Grup" className="relative h-12 w-12 rounded-full ring-1 ring-white/10" />
+            <img src="/logo.png" alt={COMPANY.brand} className="relative h-12 w-12 rounded-full ring-1 ring-white/10" />
           </div>
           <div className="hidden sm:block">
-            <div className="font-display text-lg font-semibold leading-none text-foreground">GYD Grup</div>
+            <div className="font-display text-lg font-semibold leading-none text-foreground">{COMPANY.brand}</div>
             <div className="mt-1 text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
-              Ankara · İmarlı Arsa
+              {COMPANY.shortTagline}
             </div>
           </div>
         </Link>

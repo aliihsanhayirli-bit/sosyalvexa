@@ -64,7 +64,7 @@ Tüm location'larda: HSTS, X-Frame-Options=SAMEORIGIN, X-Content-Type-Options=no
 | `VITE_POCKETBASE_URL` | ✅ dolu | `https://gydgrup.com.tr` (prod) |
 | `VITE_GEMINI_API_KEY` | ✅ dolu | `<REDACTED>` |
 | `VITE_GEMINI_MODEL` | ✅ dolu | `gemini-flash-lite-latest` (lite çalışıyor) |
-| `VITE_WHATSAPP_NUMBER` | ✅ dolu | `905324892567` |
+| `VITE_WHATSAPP_NUMBER` | ✅ dolu | `905452788073` |
 | `VITE_SITE_URL` | ✅ dolu | `https://gydgrup.com.tr` |
 | `GEMINI_API_KEY` (PB) | ✅ systemd override | aynı key, embed hook için |
 | `GEMINI_MODEL` (PB) | ✅ systemd override | `gemini-flash-lite-latest` |
