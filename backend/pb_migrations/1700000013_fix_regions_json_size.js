@@ -1,20 +1,9 @@
 // GYD GRUP — regions collection: stats/highlights JSON maxSize fix
-// 2026-07-18 — migration 12'de JSON alanlara maxSize koyulmamıştı, default 0 byte
-// düşüyordu. Bu migration maxSize ekleyerek seedable yapıyor.
+// 2026-07-25 — no-op'a çevrildi: PB 0.22'de schema objesi iterable değil
+// (eski sürüm TypeError fırlatıyordu) ve regions zaten 1700000014'te drop ediliyor.
 
 migrate((db) => {
-  const dao = new Dao(db);
-  const collection = dao.findCollectionByNameOrId('regions');
-  if (!collection) return;
-
-  const schema = collection.schema;
-  for (const field of schema) {
-    if (field.name === 'stats' || field.name === 'highlights') {
-      field.options = { ...(field.options || {}), maxSize: 10000 };
-    }
-  }
-  collection.schema = schema;
-  return dao.saveCollection(collection);
+  // no-op
 }, (db) => {
-  // no-op rollback (maxSize eski 0'a dönmez)
+  // no-op
 });
