@@ -12,6 +12,8 @@ import { pb } from '@/lib/pb';
 const TYPES = [
   { value: 'meta', label: 'Meta Business Manager kurulumu' },
   { value: 'web', label: 'Kurumsal web sitesi' },
+  { value: 'crm', label: 'CRM kurulumu' },
+  { value: 'ai', label: 'Yapay zeka çalışanı' },
   { value: 'other', label: 'Diğer / bilmiyorum' },
 ];
 
