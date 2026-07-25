@@ -196,7 +196,7 @@ function registerMiddleware(server) {
 
             const chat = model.startChat({
               history: history.map((h) => ({ role: h.role, parts: [{ text: h.content }] })),
-              generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
+              generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
             });
             const result = await chat.sendMessage(message);
             reply = result.response.text();

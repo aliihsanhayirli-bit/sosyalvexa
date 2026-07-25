@@ -99,7 +99,7 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
         body: JSON.stringify({
           system_instruction: { parts: [{ text: sysPrompt }] },
           contents: contents,
-          generationConfig: { temperature: 0.7, maxOutputTokens: 500 },
+          generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
         }),
         timeout: 30,
       });
