@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Map, MessageSquare, TrendingUp, Eye, Bot, ArrowUpRight, Building2, Phone } from 'lucide-react';
+import { Users, Inbox, MessageSquare, TrendingUp, Eye, Bot, ArrowUpRight, Building2, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { pb } from '@/lib/pb';
@@ -27,35 +27,35 @@ const CHANNEL_DATA = [
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
-    listings: 0, contacts: 0, conversations: 0, revenue: 0,
-    newContacts: 0, activeListings: 0, unread: 0, conversion: 24,
+    submissions: 0, contacts: 0, conversations: 0, revenue: 0,
+    newContacts: 0, unread: 0, conversion: 24,
   });
 
   useEffect(() => {
     (async () => {
       try {
-        const [l, c, conv] = await Promise.all([
-          pb.collection('listings').getList(1, 1, { filter: 'published = true' }),
+        const [sub, c, conv] = await Promise.all([
+          pb.collection('contact_submissions').getList(1, 1, {}),
           pb.collection('contacts').getList(1, 1, {}),
           pb.collection('conversations').getList(1, 1, {}),
         ]);
         setStats((s) => ({
           ...s,
-          listings: l.totalItems,
+          submissions: sub.totalItems,
           contacts: c.totalItems,
           conversations: conv.totalItems,
         }));
       } catch {
         // PocketBase bağlı değilse demo veriler
-        setStats((s) => ({ ...s, listings: 48, contacts: 127, conversations: 89 }));
+        setStats((s) => ({ ...s, submissions: 12, contacts: 127, conversations: 89 }));
       }
     })();
   }, []);
 
   const kpis: Kpi[] = [
-    { label: 'Aktif Arsa', value: stats.listings || 48, delta: '+12%', icon: Map, color: 'text-emerald-400' },
-    { label: 'Toplam Lead', value: stats.contacts || 127, delta: '+24%', icon: Users, color: 'text-cyan-400' },
-    { label: 'Açık Konuşma', value: stats.conversations || 89, delta: '+8%', icon: MessageSquare, color: 'text-violet-400' },
+    { label: 'Form Başvurusu', value: stats.submissions, delta: '+12%', icon: Inbox, color: 'text-emerald-400' },
+    { label: 'Toplam Lead', value: stats.contacts, delta: '+24%', icon: Users, color: 'text-cyan-400' },
+    { label: 'Açık Konuşma', value: stats.conversations, delta: '+8%', icon: MessageSquare, color: 'text-violet-400' },
     { label: 'Dönüşüm Oranı', value: `%${stats.conversion}`, delta: '+3%', icon: TrendingUp, color: 'text-gold-300' },
   ];
 
@@ -166,11 +166,11 @@ export default function AdminDashboard() {
           <CardContent>
             <div className="space-y-2">
               {[
-                { name: 'Ahmet Yılmaz', type: 'buyer', region: 'Temelli', channel: 'whatsapp', status: 'new' },
-                { name: 'Fatma Demir', type: 'seller', region: 'Polatlı', channel: 'web', status: 'qualified' },
-                { name: 'Mehmet Kaya', type: 'buyer', region: 'Sincan', channel: 'instagram', status: 'contacted' },
-                { name: 'Ayşe Şahin', type: 'invest', region: 'Çankaya', channel: 'facebook', status: 'visit_scheduled' },
-                { name: 'Ali Çelik', type: 'seller', region: 'Etimesgut', channel: 'whatsapp', status: 'new' },
+                { name: 'Ahmet Yılmaz', service: 'Meta BM Kurulumu', channel: 'whatsapp', status: 'new' },
+                { name: 'Fatma Demir', service: 'Kurumsal Web Sitesi', channel: 'web', status: 'qualified' },
+                { name: 'Mehmet Kaya', service: 'CRM Kurulumu', channel: 'instagram', status: 'contacted' },
+                { name: 'Ayşe Şahin', service: 'AI Çalışan', channel: 'facebook', status: 'visit_scheduled' },
+                { name: 'Ali Çelik', service: 'Tam Dijital Dönüşüm', channel: 'whatsapp', status: 'new' },
               ].map((c, i) => {
                 const ch = CHANNELS.find((x) => x.id === c.channel);
                 const st = CONTACT_STATUSES.find((x) => x.id === c.status);
@@ -183,7 +183,7 @@ export default function AdminDashboard() {
                       <div>
                         <div className="text-sm font-medium">{c.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {c.type === 'buyer' ? 'Alıcı' : c.type === 'seller' ? 'Satıcı' : 'Yatırımcı'} · {c.region}
+                          {c.service}
                         </div>
                       </div>
                     </div>

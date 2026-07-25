@@ -121,6 +121,62 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
     reply = DEMOS[intent] || DEMOS.general;
   }
 
+  // Web sohbeti CRM'e kaydet (contacts + conversations + messages)
+  try {
+    const visitor = String(body.visitor || '').trim().slice(0, 64) || 'anon';
+    const extId = 'web:' + visitor;
+
+    let contact = null;
+    try {
+      contact = $app.dao().findFirstRecordByFilter('contacts', 'external_id = {:ext}', { ext: extId });
+    } catch (_) {}
+    if (!contact) {
+      const contactsCol = $app.dao().findCollectionByNameOrId('contacts');
+      contact = new Record(contactsCol, {
+        name: 'Web Ziyaretçi',
+        type: 'other',
+        status: 'new',
+        source: 'web',
+        external_id: extId,
+      });
+      $app.dao().saveRecord(contact);
+    }
+
+    let conv = null;
+    try {
+      conv = $app.dao().findFirstRecordByFilter('conversations', 'contact = {:cid} && channel = "web"', { cid: contact.id });
+    } catch (_) {}
+    const now = new Date().toISOString();
+    if (!conv) {
+      const convCol = $app.dao().findCollectionByNameOrId('conversations');
+      conv = new Record(convCol, {
+        contact: contact.id,
+        channel: 'web',
+        started_at: now,
+        last_message_at: now,
+        bot_active: true,
+        unread_count: 0,
+      });
+      $app.dao().saveRecord(conv);
+    }
+
+    const msgCol = $app.dao().findCollectionByNameOrId('messages');
+    $app.dao().saveRecord(new Record(msgCol, {
+      conversation: conv.id,
+      sender: 'customer',
+      content: message,
+      type: 'text',
+    }));
+    $app.dao().saveRecord(new Record(msgCol, {
+      conversation: conv.id,
+      sender: 'bot',
+      content: reply,
+      type: 'text',
+    }));
+  } catch (err) {
+    console.log('chat persist error: ' + String(err));
+  }
+
   return e.json(200, {
     reply: reply,
     intent: intent,

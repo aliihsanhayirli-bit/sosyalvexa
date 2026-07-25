@@ -1,14 +1,13 @@
 import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
-  LayoutDashboard, Map, Users, MessageSquare, Bot, UserCog, Settings, LogOut, Building2, Bell,
+  LayoutDashboard, Users, MessageSquare, Bot, UserCog, Settings, LogOut, Building2, Bell,
 } from 'lucide-react';
 import { pb } from '@/lib/pb';
 import { cn } from '@/lib/utils';
 
 const NAV = [
   { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/arsalar', label: 'Arsalar', icon: Map },
   { to: '/admin/kisiler', label: 'CRM · Kişiler', icon: Users },
   { to: '/admin/konusmalar', label: 'Konuşmalar', icon: MessageSquare },
   { to: '/admin/bot', label: 'Bot & RAG', icon: Bot },

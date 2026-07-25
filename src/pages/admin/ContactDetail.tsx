@@ -381,7 +381,7 @@ export default function AdminContactDetail() {
                 <button onClick={sendLocationPhoto} className="rounded-md border border-white/[0.08] p-2 text-muted-foreground hover:bg-white/[0.04] hover:text-accent" title="Konum fotoğrafı gönder">
                   <ImageIcon className="h-4 w-4" />
                 </button>
-                <button className="rounded-md border border-white/[0.08] p-2 text-muted-foreground hover:bg-white/[0.04] hover:text-accent" title="Arsa paylaş">
+                <button className="rounded-md border border-white/[0.08] p-2 text-muted-foreground hover:bg-white/[0.04] hover:text-accent" title="Teklif paylaş">
                   <FileText className="h-4 w-4" />
                 </button>
                 <Input
@@ -445,8 +445,8 @@ export default function AdminContactDetail() {
                   <MessageCircle className="h-4 w-4 text-emerald-400" /> WhatsApp'tan Yaz
                 </a>
               )}
-              <Link to="/arsalar" className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-sm transition-colors hover:border-accent/30">
-                <MapPin className="h-4 w-4 text-accent" /> Arsa Öner
+              <Link to="/hizmetler" className="flex items-center gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3 text-sm transition-colors hover:border-accent/30">
+                <MapPin className="h-4 w-4 text-accent" /> Hizmet Öner
               </Link>
             </CardContent>
           </Card>

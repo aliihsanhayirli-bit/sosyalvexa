@@ -216,11 +216,11 @@ export default function AdminUsers() {
             <div className="mt-3 space-y-3 text-sm">
               <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
                 <div className="font-semibold text-gold-300">Admin</div>
-                <div className="mt-1 text-xs text-muted-foreground">Tüm arsalar, kullanıcılar, bot ayarları, sistem ayarları. Tam yetki.</div>
+                <div className="mt-1 text-xs text-muted-foreground">Tüm hizmetler, kullanıcılar, bot ayarları, sistem ayarları. Tam yetki.</div>
               </div>
               <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
                 <div className="font-semibold text-accent">Danışman</div>
-                <div className="mt-1 text-xs text-muted-foreground">Sadece atanmış arsalar ve lead'ler. CRM'de kişi kartı düzenleme.</div>
+                <div className="mt-1 text-xs text-muted-foreground">Sadece atanmış projeler ve lead'ler. CRM'de kişi kartı düzenleme.</div>
               </div>
               <div className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
                 <div className="font-semibold text-muted-foreground">Görüntüleyici</div>

@@ -224,7 +224,7 @@ export default function AdminBot() {
   const testBot = async () => {
     if (!testMsg.trim()) return;
     if (!apiKey) {
-      setTestResult('⚠️ Gemini API anahtarı tanımlı değil. .env dosyasına VITE_GEMINI_API_KEY ekleyin.\n\nDemo cevap: Merhaba! Bütçenizi öğrenebilir miyim? Size uygun arsalar önerebilirim.');
+      setTestResult('⚠️ Gemini API anahtarı tanımlı değil. .env dosyasına VITE_GEMINI_API_KEY ekleyin.\n\nDemo cevap: Merhaba! Bütçenizi öğrenebilir miyim? Size uygun hizmetleri önerebilirim.');
       return;
     }
     setTesting(true);

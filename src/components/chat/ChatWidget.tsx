@@ -1,20 +1,35 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Loader2, Sparkles, ChevronRight } from 'lucide-react';
+import { nanoid } from 'nanoid';
 import { COMPANY } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 
 type Msg = { id: string; role: 'user' | 'bot'; content: string; suggestions?: string[]; ts: number };
 
+function getVisitorId(): string {
+  try {
+    let v = localStorage.getItem('vx_visitor');
+    if (!v) {
+      v = nanoid(12);
+      localStorage.setItem('vx_visitor', v);
+    }
+    return v;
+  } catch {
+    return 'anon';
+  }
+}
+
 const INITIAL: Msg = {
   id: 'init',
   role: 'bot',
   ts: Date.now(),
-  content: `Merhaba, ben Vexabiz Asistan 👋\n\n${COMPANY.brand} olarak Türkiye genelinde işletmelere **Meta Business Manager kurulumu** ve **kurumsal web sitesi** hizmetleri sunuyoruz.\n\nHangi hizmetimiz hakkında bilgi almak istersiniz?`,
+  content: `Merhaba, ben Vexabiz Asistan 👋\n\n${COMPANY.brand} olarak Türkiye genelinde işletmelere **Meta Business Manager kurulumu**, **kurumsal web sitesi**, **CRM** ve **yapay zeka çalışanı** hizmetleri sunuyoruz.\n\nHangi hizmetimiz hakkında bilgi almak istersiniz?`,
   suggestions: [
     'Meta Business Manager kurulumu',
     'Kurumsal web sitesi',
-    'Fiyat teklifi al',
+    'CRM kurulumu',
+    'Yapay zeka çalışanı',
   ],
 };
 
@@ -49,6 +64,7 @@ export function ChatWidget() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: text,
+          visitor: getVisitorId(),
           history: messages.slice(-8).map((m) => ({ role: m.role === 'bot' ? 'model' : 'user', content: m.content })),
         }),
       });
