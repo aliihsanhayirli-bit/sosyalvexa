@@ -173,6 +173,10 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
       content: reply,
       type: 'text',
     }));
+
+    conv.set('last_message_at', now);
+    conv.set('unread_count', (parseInt(conv.get('unread_count'), 10) || 0) + 1);
+    $app.dao().saveRecord(conv);
   } catch (err) {
     console.log('chat persist error: ' + String(err));
   }
