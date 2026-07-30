@@ -16,7 +16,7 @@ export default function KVKK() {
             6698 sayılı Kişisel Verilerin Korunması Kanunu kapsamında, kişisel verilerinizin işlenmesi, saklanması ve korunması ile ilgili haklarınız hakkında sizi bilgilendirmek isteriz.
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Son güncelleme: 15 Temmuz 2026
+            Son güncelleme: 30 Temmuz 2026
           </p>
         </motion.div>
       </section>
@@ -40,7 +40,7 @@ export default function KVKK() {
             <ul className="mt-3 list-disc space-y-1 pl-6 text-sm">
               <li><strong>Kimlik bilgileri:</strong> ad, soyad</li>
               <li><strong>İletişim bilgileri:</strong> telefon, e-posta, adres</li>
-              <li><strong>Talep bilgileri:</strong> alıcı/satıcı tipi, bütçe aralığı, m² tercihi, bölge tercihi, mesaj içeriği</li>
+              <li><strong>Talep bilgileri:</strong> ilgilenilen hizmet/paket, bütçe aralığı, işletme ve sektör bilgileri, randevu tercihi, mesaj içeriği</li>
               <li><strong>Web kullanım verileri:</strong> çerezler, IP adresi, tarayıcı bilgisi, ziyaret edilen sayfalar</li>
               <li><strong>İletişim geçmişi:</strong> chat kayıtları, e-posta yazışmaları, telefon görüşme notları</li>
             </ul>
@@ -49,10 +49,10 @@ export default function KVKK() {
           <Block icon={Shield} title="3. Kişisel Verilerin İşlenme Amaçları">
             <p>Toplanan kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:</p>
             <ul className="mt-3 list-disc space-y-1 pl-6 text-sm">
-              <li>Arsa alım-satım taleplerinizin değerlendirilmesi ve size özel portföy önerileri sunulması</li>
-              <li>Tapu, imar ve hukuki danışmanlık hizmetlerinin planlanması</li>
-              <li>Yer gösterme, ekspertiz ve randevu organizasyonu</li>
-              <li>Sözleşme hazırlanması ve devir işlemleri</li>
+              <li>Dijital dönüşüm taleplerinizin değerlendirilmesi ve size özel hizmet/paket önerileri sunulması</li>
+              <li>Web sitesi, CRM, yapay zeka asistanı ve Meta altyapı kurulum hizmetlerinin planlanması</li>
+              <li>Ücretsiz keşif görüşmesi ve randevu organizasyonu</li>
+              <li>Sözleşme hazırlanması ve proje teslim işlemleri</li>
               <li>Yasal yükümlülüklerin yerine getirilmesi (vergi, mevzuat, resmi kurumlar)</li>
               <li>Müşteri memnuniyeti ve hizmet kalitesinin artırılması</li>
               <li>Pazarlama ve bilgilendirme amaçlı iletişim (onay verdiğiniz takdirde)</li>
@@ -60,7 +60,7 @@ export default function KVKK() {
           </Block>
 
           <Block icon={Share2} title="4. Verilerin Aktarımı">
-            <p>Kişisel verileriniz, kanunen yetkili kamu kurum ve kuruluşlarına, yargı mercilerine, anlaşmalı hukuk bürolarına, ekspertiz firmalarına, tapu müdürlüklerine, bankalara (kredi işlemleri için) ve yurt dışı mukim hizmet sağlayıcılarımıza (Gemini AI - chatbot için) aktarılabilir. Bu aktarımlar KVKK Madde 9 kapsamında yasal zorunluluk veya hizmet gereği yapılmaktadır.</p>
+            <p>Kişisel verileriniz, kanunen yetkili kamu kurum ve kuruluşlarına, yargı mercilerine, anlaşmalı hukuk bürolarına, mali müşavirlik firmalarına, hosting ve sunucu hizmet sağlayıcılarına, entegrasyon kapsamında Meta Platforms'a (Facebook/Instagram/WhatsApp) ve yurt dışı mukim hizmet sağlayıcılarımıza (Google — Gemini AI chatbot için) aktarılabilir. Bu aktarımlar KVKK Madde 9 kapsamında yasal zorunluluk veya hizmet gereği yapılmaktadır.</p>
             <p className="mt-3 text-sm">Yurt dışı aktarımlarda yeterli korumaya sahip ülkeler veya yazılı taahhütname ile güvence altına alınmış hizmet sağlayıcılar tercih edilmektedir.</p>
           </Block>
 
@@ -102,7 +102,8 @@ export default function KVKK() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 <tr><td className="py-2">İletişim formu mesajları</td><td className="py-2">5 yıl (talep sonrası)</td></tr>
-                <tr><td className="py-2">CRM (contact/conversation/message)</td><td className="py-2">10 yıl (tapu mevzuatı)</td></tr>
+                <tr><td className="py-2">CRM (contact/conversation/message)</td><td className="py-2">10 yıl (ticari mevzuat)</td></tr>
+                <tr><td className="py-2">Randevu kayıtları</td><td className="py-2">5 yıl</td></tr>
                 <tr><td className="py-2">Chatbot logları</td><td className="py-2">1 yıl</td></tr>
                 <tr><td className="py-2">Yedekleme (backup)</td><td className="py-2">7 gün (rolling)</td></tr>
                 <tr><td className="py-2">Web analytics</td><td className="py-2">2 yıl</td></tr>

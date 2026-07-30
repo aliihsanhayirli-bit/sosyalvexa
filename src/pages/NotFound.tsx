@@ -24,8 +24,8 @@ export default function NotFound() {
           <Link to="/">
             <Button variant="gold" size="lg"><Home className="h-4 w-4" /> Anasayfa</Button>
           </Link>
-          <Link to="/arsalar">
-            <Button variant="outline" size="lg"><ArrowLeft className="h-4 w-4" /> Arsalara Dön</Button>
+          <Link to="/hizmetler">
+            <Button variant="outline" size="lg"><ArrowLeft className="h-4 w-4" /> Hizmetlere Dön</Button>
           </Link>
         </div>
       </motion.div>
