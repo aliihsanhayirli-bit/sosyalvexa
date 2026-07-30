@@ -3,12 +3,12 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { SERVICES, PROCESS, COMPANY } from '@/lib/constants';
 import {
-  Facebook, Globe, Users, Bot as BotIcon, Rocket, ArrowRight,
+  Facebook, Globe, Users, Bot as BotIcon, Rocket, Server, Wrench, ArrowRight,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const ICONS: Record<string, typeof Facebook> = {
-  Facebook, Globe, Users, Bot: BotIcon, Rocket,
+  Facebook, Globe, Users, Bot: BotIcon, Rocket, Server, Wrench,
 };
 
 export default function Services() {
@@ -21,7 +21,7 @@ export default function Services() {
             Her ihtiyaca <span className="gold-text italic">özel çözüm</span>
           </h1>
           <p className="mt-6 text-lg leading-relaxed text-foreground/70">
-            Meta Business Manager kurulumundan kurumsal web sitesine — her hizmetimiz tek başına veya paket halinde, hızlı ve uçtan uca.
+            Diş klinikleri, fizik tedavi merkezleri ve güzellik merkezleri başta olmak üzere — Meta altyapısından yapay zeka asistanına, her hizmetimiz tek başına veya paket halinde, hızlı ve uçtan uca.
           </p>
         </motion.div>
       </section>

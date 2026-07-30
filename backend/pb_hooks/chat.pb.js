@@ -1,6 +1,6 @@
 // Vexabiz Digital — chat API + Meta webhook hook'ları
-// /api/chat          → Gemini (server-side key) + intent fallback + CRM kaydı
-// /api/webhook/meta  → Meta Messenger/Instagram webhook (CRM kaydı + bot cevap)
+// /api/chat          → Gemini (server-side key) + intent fallback + CRM kaydı + randevu
+// /api/webhook/meta  → Meta Messenger/Instagram webhook (CRM kaydı + bot cevap + randevu)
 //
 // NOT: PB 0.22 JSVM'de dosya top-level scope'u route callback'lerine TAŞINMIYOR
 // (globalThis atamaları bile kayboluyor — doğrulandı). Bu yüzden her callback
@@ -10,54 +10,92 @@
 routerAdd('POST', '/api/chat', (e) => {
   const HANDOFF_KEYWORDS = ['danışman', 'danisman', 'insan', 'kişi', 'arayın', 'arayin', 'telefon', 'görüşme', 'gorisme', 'görüşelim', 'goruseylim', 'fiyat', 'teklif', 'sözleşme'];
 
-  const DEFAULT_SYSTEM = `Sen Vexabiz Digital'ın yapay zeka dijital dönüşüm danışmanısın. Türkiye genelinde KOBİ ve işletmelere **Meta Business Manager kurulumu**, **kurumsal web sitesi**, **CRM kurulumu** ve **işletmeye özel yapay zeka çalışanı geliştirme** hizmetleri sunan uçtan uca bir dijital danışmanlık firmasıyız.
+  const DEFAULT_SYSTEM = `Sen Vexabiz Digital'ın yapay zeka satış asistanısın. Vexabiz Dijital Danışmanlık ve Yazılım Ltd. Şti.; diş klinikleri, fizik tedavi merkezleri, güzellik merkezleri ve KOBİ'ler için web sitesi, CRM, yapay zeka asistanı ve Meta altyapısını tek pakette, müşteriye özel VPS sunucuda kuran bir dijital dönüşüm firmasıdır.
 
 Marka sözümüz: "Hemen olsun istemez misiniz? Doğru olsun istemez misiniz? 1 kerede tam olsun ister misiniz?"
 
-Görevin:
-1. Ziyaretçilere sıcak, profesyonel ve güven veren bir dille yanıt vermek
-2. İşletmenin sektörünü, ölçeğini ve mevcut dijital altyapısını anlamak
-3. Dört ana hizmetten hangisine ihtiyaç olduğunu tespit etmek (Meta BM / Web / CRM / AI Çalışan)
-4. Uygun olduğunda "Tam Dijital Dönüşüm Paketi"ni önermek
-5. Bütçe aralığını ve deadline'ı toplamak
-6. Sektöre uygun referans projelerden bahsetmek (gydgrup.com.tr, temelliarsa.com, autotube.vip vb.)
-7. Somut fiyat aralığı vermek (Meta BM 7.5-30K, Web 20-75K, CRM 15-75K, AI 25K+, Tam Paket 75-200K)
-8. Net aksiyon önermek (görüşme, WhatsApp, teklif formu)
+HİZMETLER VE BAŞLANGIÇ FİYATLARI (+ KDV):
+- Meta Business Manager Kurulumu (şirket doğrulaması dahil): 7.500 TL
+- Kurumsal Web Sitesi: 22.500 TL
+- CRM Kurulumu: 18.000 TL
+- Yapay Zeka Asistanı (Web + WhatsApp + Instagram + Messenger): 35.000 TL
+- VPS Özel Sunucu Kurulumu: 7.500 TL
+- Bakım & Destek: 4.900 TL/ay'dan itibaren
 
-İletişim: +90 545 278 80 73 (telefon ve WhatsApp), info@vexabiz.com. Danışman, görüşme, fiyat veya teklif isteyen ziyaretçiye bu numarayı ve sitedeki iletişim formunu paylaş.
+PAKETLER (tek seferlik kurulum, + KDV):
+1) Dijital Başlangıç — 69.900 TL (liste değeri 112.000 TL): kurumsal web sitesi + SEO + SSL + domain/mail, Facebook + Instagram + WhatsApp bağlantıları, Meta Business Manager + doğrulama desteği, Pixel + CAPI, temel CRM, VPS kurulumu + güvenlik, eğitim. Teslim 7-10 iş günü.
+2) Dijital Klinik Pro — 149.900 TL (liste değeri 356.000 TL): Başlangıç paketinin tamamı + gelişmiş CRM (hasta takibi, tedavi, teklif, randevu), yapay zeka asistanı (4 kanal), randevu + hatırlatma sistemi, admin paneli + çok kullanıcı, otomasyonlar, dashboard, günlük yedek + izleme, 30 gün destek. Teslim 15-25 iş günü.
 
-Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut rakamlar kullan, sonunda aksiyon öner.`;
+ÇALIŞMA ŞARTLARI: %50 peşinat sözleşmeyle, %50 teslimde; ödemeler şirket hesabına havale/EFT. Tasarımda 2 revizyon dahil. Yazılım lisansı Vexabiz'e aittir, müşteri kullanım hakkı alır; sistem müşteriye özel VPS'te çalışır, veriler müşteride kalır. Bakım: Standart 4.900 TL/ay, Premium 9.900 TL/ay.
+
+GÖREVLERİN:
+1. Sıcak, profesyonel, güven veren bir dille yanıt ver
+2. İşletmenin sektörünü (diş kliniği, fizik tedavi, güzellik vb.), ölçeğini ve ihtiyacını anla
+3. Uygun hizmet veya paketi öner, gerektiğinde kalem fiyatlarından örnek ver
+4. Soruları net yanıtla; bilmediğin konuda uydurma, danışmana yönlendir
+5. Asıl amacın: ziyaretçiyi ücretsiz keşif görüşmesine (randevuya) dönüştürmek
+
+RANDEVU OLUŞTURMA (ÇOK ÖNEMLİ):
+- Ziyaretçi görüşme/randevu istediğinde uygun gün ve saat öner; ziyaretçinin verdiği gün+saati netleştir ve teyit ettir.
+- Gün ve saat NET olarak anlaşıldığında (ziyaretçi açıkça onayladığında) yanıtının EN SONUNA, müşteriye göstermeden şu etiketi ekle:
+[[RANDEVU:{"date":"YYYY-MM-DD HH:mm","service":"ilgili hizmet veya paket","phone":"varsa telefon","notes":"kısa not"}]]
+- Tarih veya saat net değilse etiketi ASLA yazma; önce netleştir.
+- Çalışma saatleri: Pazartesi-Cumartesi 09:00-19:00. Saat dışı istekte en yakın uygun zamanı öner.
+- Randevu sonrası doğal dille teyit et: "Randevunuzu ... için not aldım; danışmanımız sizi arayarak teyit edecek."
+
+İletişim: +90 545 278 80 73 (telefon ve WhatsApp), info@vexabiz.com. İnsan danışman isteyene bu numarayı ver.
+
+Cevaplarında kısa ve net ol (max 3-4 cümle + gerektiğinde madde listesi), samimi ama profesyonel, somut rakamlar kullan, sonunda aksiyon öner.`;
 
   const DEMOS = {
-    meta: "Meta Business Manager kurulumumuz 3-7 günde tamamlanır: işletme hesabı + BM doğrulama, sayfa ve reklam hesabı kurulumu, Meta Pixel + CAPI, GA4 ölçüm eşlemesi. Kurulum 7.500 TL'den başlıyor. Ücretsiz keşif için iletişim formumuzu doldurabilirsiniz.",
-    web: "Kurumsal web sitenizi 15-30 günde teslim ediyoruz. SEO altyapısı, mobil uyumlu tasarım, hızlı yayın ve CMS dahil. Kurulum 20.000 TL'den başlıyor. Sektörünüze göre örnek çalışmalarımızı gösterebilirim.",
-    crm: "İşletmenize en uygun CRM'i birlikte seçiyoruz: HubSpot, Bitrix24, Pipedrive veya yerli çözümler. Kurulum + pipeline + entegrasyon 15.000 TL'den başlıyor, 7-15 günde teslim.",
-    ai: "İşletmenize özel yapay zeka çalışanı geliştiriyoruz: web + WhatsApp + Instagram + Messenger tek noktada. RAG bilgi tabanı, kendi verilerinizle çalışır. 25.000 TL'den başlayan fiyatlarla 15-45 günde teslim.",
-    full: "Tam dijital dönüşüm paketimiz Meta + Web + CRM + AI'ı uçtan uca sunar. Tek sözleşme, tek ekip, 6 ay ücretsiz destek. Kurulum 75.000 TL'den başlıyor.",
+    meta: "Meta Business Manager kurulumumuz 3-7 günde tamamlanır: işletme hesabı + şirket doğrulaması, sayfa ve reklam hesabı, Meta Pixel + CAPI. 7.500 TL'den başlıyor (+ KDV). Ücretsiz keşif için randevu oluşturabilirim — hangi gün size uygun?",
+    web: "Kurumsal web sitenizi 7-10 iş gününde teslim ediyoruz: mobil uyumlu tasarım, SEO altyapısı, SSL, domain ve kurumsal mail dahil. 22.500 TL'den başlıyor (+ KDV). Sektörünüze göre örnek çalışmalarımızı paylaşabilirim.",
+    crm: "Hasta ve müşteri kayıtlarınızı tek panelde topluyoruz: formlar, teklif, randevu ve hatırlatmalar. Temel CRM 18.000 TL, gelişmiş CRM 45.000 TL'den başlıyor (+ KDV).",
+    ai: "Yapay zeka asistanınız web sitenizde, WhatsApp, Instagram DM ve Messenger'da 7/24 çalışır; soruları yanıtlar, bilgi toplar ve randevu oluşturur. 35.000 TL'den başlıyor (+ KDV).",
+    full: "İki paketimiz var: Dijital Başlangıç 69.900 TL (web sitesi + Meta altyapısı + temel CRM + VPS, 7-10 iş günü) ve Dijital Klinik Pro 149.900 TL (üzerine gelişmiş CRM, AI asistan, randevu sistemi, admin paneli, 15-25 iş günü). Fiyatlara KDV eklenir. Hangisini anlatayım?",
+    randevu: "Memnuniyetle! Pazartesi-Cumartesi 09:00-19:00 arasında çalışıyoruz. Hangi gün ve saat size uygun?",
     handoff: "Tabii, sizi hemen danışmanımıza yönlendiriyorum. +90 545 278 80 73 numaramızdan arayabilir veya WhatsApp'tan yazabilirsiniz.",
-    general: "Merhaba 👋 Vexabiz Digital'a hoş geldiniz! KOBİ'lere Meta Business Manager, kurumsal web sitesi, CRM ve yapay zeka çalışanı hizmetleri sunuyoruz. Hangi hizmet hakkında bilgi istersiniz?",
+    general: "Merhaba 👋 Vexabiz Digital'a hoş geldiniz! Klinikler ve işletmeler için web sitesi, CRM, yapay zeka asistanı ve Meta altyapısını tek pakette kuruyoruz. Size nasıl yardımcı olabilirim?",
   };
 
   const SUGGESTIONS = {
-    meta: ['Meta BM kurulumu kaç gün sürer?', 'Pixel + CAPI dahil mi?', 'Fiyat teklifi al'],
-    web: ['Hangi teknolojiler?', 'SEO dahil mi?', 'Fiyat teklifi al'],
-    crm: ['Hangi CRM uygun?', 'Entegrasyon olur mu?', 'Fiyat teklifi al'],
-    ai: ['Omnichannel mi?', 'Kendi verilerimle mi?', 'Fiyat teklifi al'],
-    full: ['Paket içeriği?', '6 ay destek?', 'Fiyat teklifi al'],
+    meta: ['Doğrulama dahil mi?', 'Pixel + CAPI dahil mi?', 'Randevu al'],
+    web: ['Neler dahil?', 'Kaç günde teslim?', 'Randevu al'],
+    crm: ['Temel ve gelişmiş farkı?', 'Randevu sistemi var mı?', 'Randevu al'],
+    ai: ['Hangi kanallarda çalışır?', 'Randevu oluşturur mu?', 'Randevu al'],
+    full: ['Dijital Başlangıç Paketi', 'Dijital Klinik Pro', 'Randevu al'],
+    randevu: ['Yarın 10:00', 'Haftaya cuma 14:00'],
     handoff: [],
-    general: ['Meta Business Manager', 'Kurumsal web sitesi', 'CRM kurulumu', 'Yapay zeka çalışanı'],
+    general: ['Dijital Başlangıç Paketi', 'Dijital Klinik Pro', 'Randevu almak istiyorum', 'Bakım paketleri'],
   };
+
+  const APPT_PROTOCOL = `
+
+RANDEVU PROTOKOLÜ (çok önemli):
+- Ziyaretçi görüşme/randevu istediğinde uygun gün ve saat öner; gün+saati netleştir ve teyit ettir.
+- Gün ve saat NET olarak anlaşıldığında yanıtının EN SONUNA, müşteriye göstermeden şu etiketi ekle:
+[[RANDEVU:{"date":"YYYY-MM-DD HH:mm","service":"ilgili hizmet/paket","phone":"varsa telefon","notes":"kısa not"}]]
+- Tarih veya saat net değilse etiketi ASLA yazma; önce netleştir.
+- Çalışma saatleri: Pazartesi-Cumartesi 09:00-19:00. Saat dışı istekte en yakın uygun zamanı öner.`;
+
+  function trNow() {
+    const t = new Date(Date.now() + 3 * 3600 * 1000);
+    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    const p = (n) => String(n).padStart(2, '0');
+    return days[t.getUTCDay()] + ' ' + p(t.getUTCDate()) + '.' + p(t.getUTCMonth() + 1) + '.' + t.getUTCFullYear() + ' ' + p(t.getUTCHours()) + ':' + p(t.getUTCMinutes());
+  }
 
   function detectIntent(m) {
     const s = (m || '').toLowerCase();
     for (let i = 0; i < HANDOFF_KEYWORDS.length; i++) {
       if (s.indexOf(HANDOFF_KEYWORDS[i]) !== -1) return 'handoff';
     }
+    if (/(randevu|müsaitlik|musaitlik|görüşme saati)/.test(s)) return 'randevu';
     if (/(meta|facebook|instagram|business manager|pixel|capi|reklam|ads)/.test(s)) return 'meta';
     if (/(web|site|web sitesi|kurumsal|e-ticaret|seo|landing)/.test(s)) return 'web';
-    if (/(crm|hubspot|bitrix|pipedrive|pipeline|müşteri yönetimi)/.test(s)) return 'crm';
+    if (/(crm|hasta takip|müşteri yönetimi|musteri yonetimi)/.test(s)) return 'crm';
     if (/(yapay zeka|ai|bot|asistan|otomasyon|chatgpt|gpt|gemini|whatsapp bot)/.test(s)) return 'ai';
-    if (/(paket|dönüşüm|donusum|uçtan uca|uctan uca)/.test(s)) return 'full';
+    if (/(paket|dönüşüm|donusum|uçtan uca|uctan uca|klinik pro|başlangıç paketi)/.test(s)) return 'full';
     return 'general';
   }
 
@@ -67,6 +105,70 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
       if (items && items.length > 0) return items[0];
     } catch (_) {}
     return null;
+  }
+
+  function buildSystemPrompt(settings) {
+    let sys = DEFAULT_SYSTEM;
+    if (settings && settings.get('system_prompt')) sys = String(settings.get('system_prompt'));
+    if (sys.indexOf('[[RANDEVU:') === -1) sys += APPT_PROTOCOL;
+    sys += '\n\nBugün (Türkiye saati): ' + trNow() + '. "Yarın", "haftaya", "cumaya" gibi ifadeleri buna göre gerçek tarihe çevir.';
+    return sys;
+  }
+
+  function extractAppointment(reply) {
+    const m = String(reply || '').match(/\[\[RANDEVU:(\{[\s\S]*?\})\]\]/);
+    if (!m) return { text: reply, appt: null };
+    let appt = null;
+    try { appt = JSON.parse(m[1]); } catch (_) {}
+    return { text: String(reply).replace(m[0], '').trim(), appt: appt };
+  }
+
+  function createAppointment(conv, appt, channel) {
+    if (!appt || !appt.date) return false;
+    const dm = String(appt.date).match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    if (!dm) return false;
+    const utcMs = Date.UTC(+dm[1], +dm[2] - 1, +dm[3], +dm[4], +dm[5]) - 3 * 3600 * 1000;
+    const nowMs = Date.now();
+    if (utcMs < nowMs - 2 * 3600 * 1000 || utcMs > nowMs + 200 * 24 * 3600 * 1000) return false;
+
+    let contact = null;
+    try { contact = $app.dao().findRecordById('contacts', String(conv.get('contact'))); } catch (_) {}
+
+    const col = $app.dao().findCollectionByNameOrId('appointments');
+    const rec = new Record(col, {
+      contact: String(conv.get('contact')),
+      conversation: conv.id,
+      name: contact ? String(contact.get('name') || 'Müşteri') : 'Müşteri',
+      phone: String(appt.phone || (contact ? contact.get('phone') || '' : '')).slice(0, 50),
+      service: String(appt.service || '').slice(0, 200),
+      date: new Date(utcMs).toISOString(),
+      duration_min: 30,
+      channel: channel,
+      status: 'pending',
+      notes: String(appt.notes || '').slice(0, 2000),
+      source: 'bot',
+    });
+    $app.dao().saveRecord(rec);
+
+    if (contact) {
+      const st = String(contact.get('status') || '');
+      if (st === 'new' || st === 'contacted') {
+        contact.set('status', 'visit_scheduled');
+        try { $app.dao().saveRecord(contact); } catch (_) {}
+      }
+      try {
+        const timelineCol = $app.dao().findCollectionByNameOrId('timeline_events');
+        $app.dao().saveRecord(new Record(timelineCol, {
+          contact: contact.id,
+          type: 'note',
+          title: 'Randevu oluşturuldu',
+          description: (String(appt.service || 'Keşif görüşmesi') + ' — ' + String(appt.date)).slice(0, 200),
+          ref_id: rec.id,
+          meta: { channel: channel, source: 'bot' },
+        }));
+      } catch (_) {}
+    }
+    return true;
   }
 
   function getOrCreateThread(extId, name, source, channel) {
@@ -143,8 +245,7 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
 
   if (apiKey && apiKey.length > 10) {
     try {
-      let sysPrompt = DEFAULT_SYSTEM;
-      if (settings && settings.get('system_prompt')) sysPrompt = settings.get('system_prompt');
+      const sysPrompt = buildSystemPrompt(settings);
 
       const history = Array.isArray(body.history) ? body.history.slice(-8) : [];
       const contents = [];
@@ -182,9 +283,17 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
     reply = DEMOS[intent] || DEMOS.general;
   }
 
+  const ext = extractAppointment(reply);
+  reply = ext.text;
+  let booked = false;
+
   try {
     const visitor = String(body.visitor || '').trim().slice(0, 64) || 'anon';
     const conv = getOrCreateThread('web:' + visitor, 'Web Ziyaretçi', 'web', 'web');
+    if (ext.appt) {
+      booked = createAppointment(conv, ext.appt, 'web');
+      if (!booked) console.log('[chat] randevu etiketi parse edildi ama kayıt oluşturulamadı: ' + JSON.stringify(ext.appt).slice(0, 200));
+    }
     saveMessages(conv, message, reply);
   } catch (err) {
     console.log('chat persist error: ' + String(err));
@@ -195,6 +304,7 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
     intent: intent,
     suggestions: SUGGESTIONS[intent] || SUGGESTIONS.general,
     ai: usedAI,
+    booked: booked,
   });
 });
 
@@ -216,44 +326,81 @@ routerAdd('GET', '/api/webhook/meta', (e) => {
 routerAdd('POST', '/api/webhook/meta', (e) => {
   const HANDOFF_KEYWORDS = ['danışman', 'danisman', 'insan', 'kişi', 'arayın', 'arayin', 'telefon', 'görüşme', 'gorisme', 'görüşelim', 'goruseylim', 'fiyat', 'teklif', 'sözleşme'];
 
-  const DEFAULT_SYSTEM = `Sen Vexabiz Digital'ın yapay zeka dijital dönüşüm danışmanısın. Türkiye genelinde KOBİ ve işletmelere **Meta Business Manager kurulumu**, **kurumsal web sitesi**, **CRM kurulumu** ve **işletmeye özel yapay zeka çalışanı geliştirme** hizmetleri sunan uçtan uca bir dijital danışmanlık firmasıyız.
+  const DEFAULT_SYSTEM = `Sen Vexabiz Digital'ın yapay zeka satış asistanısın. Vexabiz Dijital Danışmanlık ve Yazılım Ltd. Şti.; diş klinikleri, fizik tedavi merkezleri, güzellik merkezleri ve KOBİ'ler için web sitesi, CRM, yapay zeka asistanı ve Meta altyapısını tek pakette, müşteriye özel VPS sunucuda kuran bir dijital dönüşüm firmasıdır.
 
 Marka sözümüz: "Hemen olsun istemez misiniz? Doğru olsun istemez misiniz? 1 kerede tam olsun ister misiniz?"
 
-Görevin:
-1. Ziyaretçilere sıcak, profesyonel ve güven veren bir dille yanıt vermek
-2. İşletmenin sektörünü, ölçeğini ve mevcut dijital altyapısını anlamak
-3. Dört ana hizmetten hangisine ihtiyaç olduğunu tespit etmek (Meta BM / Web / CRM / AI Çalışan)
-4. Uygun olduğunda "Tam Dijital Dönüşüm Paketi"ni önermek
-5. Bütçe aralığını ve deadline'ı toplamak
-6. Sektöre uygun referans projelerden bahsetmek (gydgrup.com.tr, temelliarsa.com, autotube.vip vb.)
-7. Somut fiyat aralığı vermek (Meta BM 7.5-30K, Web 20-75K, CRM 15-75K, AI 25K+, Tam Paket 75-200K)
-8. Net aksiyon önermek (görüşme, WhatsApp, teklif formu)
+HİZMETLER VE BAŞLANGIÇ FİYATLARI (+ KDV):
+- Meta Business Manager Kurulumu (şirket doğrulaması dahil): 7.500 TL
+- Kurumsal Web Sitesi: 22.500 TL
+- CRM Kurulumu: 18.000 TL
+- Yapay Zeka Asistanı (Web + WhatsApp + Instagram + Messenger): 35.000 TL
+- VPS Özel Sunucu Kurulumu: 7.500 TL
+- Bakım & Destek: 4.900 TL/ay'dan itibaren
 
-İletişim: +90 545 278 80 73 (telefon ve WhatsApp), info@vexabiz.com. Danışman, görüşme, fiyat veya teklif isteyen ziyaretçiye bu numarayı ve sitedeki iletişim formunu paylaş.
+PAKETLER (tek seferlik kurulum, + KDV):
+1) Dijital Başlangıç — 69.900 TL (liste değeri 112.000 TL): kurumsal web sitesi + SEO + SSL + domain/mail, Facebook + Instagram + WhatsApp bağlantıları, Meta Business Manager + doğrulama desteği, Pixel + CAPI, temel CRM, VPS kurulumu + güvenlik, eğitim. Teslim 7-10 iş günü.
+2) Dijital Klinik Pro — 149.900 TL (liste değeri 356.000 TL): Başlangıç paketinin tamamı + gelişmiş CRM (hasta takibi, tedavi, teklif, randevu), yapay zeka asistanı (4 kanal), randevu + hatırlatma sistemi, admin paneli + çok kullanıcı, otomasyonlar, dashboard, günlük yedek + izleme, 30 gün destek. Teslim 15-25 iş günü.
 
-Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut rakamlar kullan, sonunda aksiyon öner.`;
+ÇALIŞMA ŞARTLARI: %50 peşinat sözleşmeyle, %50 teslimde; ödemeler şirket hesabına havale/EFT. Tasarımda 2 revizyon dahil. Yazılım lisansı Vexabiz'e aittir, müşteri kullanım hakkı alır; sistem müşteriye özel VPS'te çalışır, veriler müşteride kalır. Bakım: Standart 4.900 TL/ay, Premium 9.900 TL/ay.
+
+GÖREVLERİN:
+1. Sıcak, profesyonel, güven veren bir dille yanıt ver
+2. İşletmenin sektörünü (diş kliniği, fizik tedavi, güzellik vb.), ölçeğini ve ihtiyacını anla
+3. Uygun hizmet veya paketi öner, gerektiğinde kalem fiyatlarından örnek ver
+4. Soruları net yanıtla; bilmediğin konuda uydurma, danışmana yönlendir
+5. Asıl amacın: ziyaretçiyi ücretsiz keşif görüşmesine (randevuya) dönüştürmek
+
+RANDEVU OLUŞTURMA (ÇOK ÖNEMLİ):
+- Ziyaretçi görüşme/randevu istediğinde uygun gün ve saat öner; ziyaretçinin verdiği gün+saati netleştir ve teyit ettir.
+- Gün ve saat NET olarak anlaşıldığında (ziyaretçi açıkça onayladığında) yanıtının EN SONUNA, müşteriye göstermeden şu etiketi ekle:
+[[RANDEVU:{"date":"YYYY-MM-DD HH:mm","service":"ilgili hizmet veya paket","phone":"varsa telefon","notes":"kısa not"}]]
+- Tarih veya saat net değilse etiketi ASLA yazma; önce netleştir.
+- Çalışma saatleri: Pazartesi-Cumartesi 09:00-19:00. Saat dışı istekte en yakın uygun zamanı öner.
+- Randevu sonrası doğal dille teyit et: "Randevunuzu ... için not aldım; danışmanımız sizi arayarak teyit edecek."
+
+İletişim: +90 545 278 80 73 (telefon ve WhatsApp), info@vexabiz.com. İnsan danışman isteyene bu numarayı ver.
+
+Cevaplarında kısa ve net ol (max 3-4 cümle + gerektiğinde madde listesi), samimi ama profesyonel, somut rakamlar kullan, sonunda aksiyon öner.`;
 
   const DEMOS = {
-    meta: "Meta Business Manager kurulumumuz 3-7 günde tamamlanır: işletme hesabı + BM doğrulama, sayfa ve reklam hesabı kurulumu, Meta Pixel + CAPI, GA4 ölçüm eşlemesi. Kurulum 7.500 TL'den başlıyor. Ücretsiz keşif için iletişim formumuzu doldurabilirsiniz.",
-    web: "Kurumsal web sitenizi 15-30 günde teslim ediyoruz. SEO altyapısı, mobil uyumlu tasarım, hızlı yayın ve CMS dahil. Kurulum 20.000 TL'den başlıyor. Sektörünüze göre örnek çalışmalarımızı gösterebilirim.",
-    crm: "İşletmenize en uygun CRM'i birlikte seçiyoruz: HubSpot, Bitrix24, Pipedrive veya yerli çözümler. Kurulum + pipeline + entegrasyon 15.000 TL'den başlıyor, 7-15 günde teslim.",
-    ai: "İşletmenize özel yapay zeka çalışanı geliştiriyoruz: web + WhatsApp + Instagram + Messenger tek noktada. RAG bilgi tabanı, kendi verilerinizle çalışır. 25.000 TL'den başlayan fiyatlarla 15-45 günde teslim.",
-    full: "Tam dijital dönüşüm paketimiz Meta + Web + CRM + AI'ı uçtan uca sunar. Tek sözleşme, tek ekip, 6 ay ücretsiz destek. Kurulum 75.000 TL'den başlıyor.",
+    meta: "Meta Business Manager kurulumumuz 3-7 günde tamamlanır: işletme hesabı + şirket doğrulaması, sayfa ve reklam hesabı, Meta Pixel + CAPI. 7.500 TL'den başlıyor (+ KDV). Ücretsiz keşif için randevu oluşturabilirim — hangi gün size uygun?",
+    web: "Kurumsal web sitenizi 7-10 iş gününde teslim ediyoruz: mobil uyumlu tasarım, SEO altyapısı, SSL, domain ve kurumsal mail dahil. 22.500 TL'den başlıyor (+ KDV). Sektörünüze göre örnek çalışmalarımızı paylaşabilirim.",
+    crm: "Hasta ve müşteri kayıtlarınızı tek panelde topluyoruz: formlar, teklif, randevu ve hatırlatmalar. Temel CRM 18.000 TL, gelişmiş CRM 45.000 TL'den başlıyor (+ KDV).",
+    ai: "Yapay zeka asistanınız web sitenizde, WhatsApp, Instagram DM ve Messenger'da 7/24 çalışır; soruları yanıtlar, bilgi toplar ve randevu oluşturur. 35.000 TL'den başlıyor (+ KDV).",
+    full: "İki paketimiz var: Dijital Başlangıç 69.900 TL (web sitesi + Meta altyapısı + temel CRM + VPS, 7-10 iş günü) ve Dijital Klinik Pro 149.900 TL (üzerine gelişmiş CRM, AI asistan, randevu sistemi, admin paneli, 15-25 iş günü). Fiyatlara KDV eklenir. Hangisini anlatayım?",
+    randevu: "Memnuniyetle! Pazartesi-Cumartesi 09:00-19:00 arasında çalışıyoruz. Hangi gün ve saat size uygun?",
     handoff: "Tabii, sizi hemen danışmanımıza yönlendiriyorum. +90 545 278 80 73 numaramızdan arayabilir veya WhatsApp'tan yazabilirsiniz.",
-    general: "Merhaba 👋 Vexabiz Digital'a hoş geldiniz! KOBİ'lere Meta Business Manager, kurumsal web sitesi, CRM ve yapay zeka çalışanı hizmetleri sunuyoruz. Hangi hizmet hakkında bilgi istersiniz?",
+    general: "Merhaba 👋 Vexabiz Digital'a hoş geldiniz! Klinikler ve işletmeler için web sitesi, CRM, yapay zeka asistanı ve Meta altyapısını tek pakette kuruyoruz. Size nasıl yardımcı olabilirim?",
   };
+
+  const APPT_PROTOCOL = `
+
+RANDEVU PROTOKOLÜ (çok önemli):
+- Ziyaretçi görüşme/randevu istediğinde uygun gün ve saat öner; gün+saati netleştir ve teyit ettir.
+- Gün ve saat NET olarak anlaşıldığında yanıtının EN SONUNA, müşteriye göstermeden şu etiketi ekle:
+[[RANDEVU:{"date":"YYYY-MM-DD HH:mm","service":"ilgili hizmet/paket","phone":"varsa telefon","notes":"kısa not"}]]
+- Tarih veya saat net değilse etiketi ASLA yazma; önce netleştir.
+- Çalışma saatleri: Pazartesi-Cumartesi 09:00-19:00. Saat dışı istekte en yakın uygun zamanı öner.`;
+
+  function trNow() {
+    const t = new Date(Date.now() + 3 * 3600 * 1000);
+    const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    const p = (n) => String(n).padStart(2, '0');
+    return days[t.getUTCDay()] + ' ' + p(t.getUTCDate()) + '.' + p(t.getUTCMonth() + 1) + '.' + t.getUTCFullYear() + ' ' + p(t.getUTCHours()) + ':' + p(t.getUTCMinutes());
+  }
 
   function detectIntent(m) {
     const s = (m || '').toLowerCase();
     for (let i = 0; i < HANDOFF_KEYWORDS.length; i++) {
       if (s.indexOf(HANDOFF_KEYWORDS[i]) !== -1) return 'handoff';
     }
+    if (/(randevu|müsaitlik|musaitlik|görüşme saati)/.test(s)) return 'randevu';
     if (/(meta|facebook|instagram|business manager|pixel|capi|reklam|ads)/.test(s)) return 'meta';
     if (/(web|site|web sitesi|kurumsal|e-ticaret|seo|landing)/.test(s)) return 'web';
-    if (/(crm|hubspot|bitrix|pipedrive|pipeline|müşteri yönetimi)/.test(s)) return 'crm';
+    if (/(crm|hasta takip|müşteri yönetimi|musteri yonetimi)/.test(s)) return 'crm';
     if (/(yapay zeka|ai|bot|asistan|otomasyon|chatgpt|gpt|gemini|whatsapp bot)/.test(s)) return 'ai';
-    if (/(paket|dönüşüm|donusum|uçtan uca|uctan uca)/.test(s)) return 'full';
+    if (/(paket|dönüşüm|donusum|uçtan uca|uctan uca|klinik pro|başlangıç paketi)/.test(s)) return 'full';
     return 'general';
   }
 
@@ -265,6 +412,70 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
     return null;
   }
 
+  function buildSystemPrompt(settings) {
+    let sys = DEFAULT_SYSTEM;
+    if (settings && settings.get('system_prompt')) sys = String(settings.get('system_prompt'));
+    if (sys.indexOf('[[RANDEVU:') === -1) sys += APPT_PROTOCOL;
+    sys += '\n\nBugün (Türkiye saati): ' + trNow() + '. "Yarın", "haftaya", "cumaya" gibi ifadeleri buna göre gerçek tarihe çevir.';
+    return sys;
+  }
+
+  function extractAppointment(reply) {
+    const m = String(reply || '').match(/\[\[RANDEVU:(\{[\s\S]*?\})\]\]/);
+    if (!m) return { text: reply, appt: null };
+    let appt = null;
+    try { appt = JSON.parse(m[1]); } catch (_) {}
+    return { text: String(reply).replace(m[0], '').trim(), appt: appt };
+  }
+
+  function createAppointment(conv, appt, channel) {
+    if (!appt || !appt.date) return false;
+    const dm = String(appt.date).match(/(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})/);
+    if (!dm) return false;
+    const utcMs = Date.UTC(+dm[1], +dm[2] - 1, +dm[3], +dm[4], +dm[5]) - 3 * 3600 * 1000;
+    const nowMs = Date.now();
+    if (utcMs < nowMs - 2 * 3600 * 1000 || utcMs > nowMs + 200 * 24 * 3600 * 1000) return false;
+
+    let contact = null;
+    try { contact = $app.dao().findRecordById('contacts', String(conv.get('contact'))); } catch (_) {}
+
+    const col = $app.dao().findCollectionByNameOrId('appointments');
+    const rec = new Record(col, {
+      contact: String(conv.get('contact')),
+      conversation: conv.id,
+      name: contact ? String(contact.get('name') || 'Müşteri') : 'Müşteri',
+      phone: String(appt.phone || (contact ? contact.get('phone') || '' : '')).slice(0, 50),
+      service: String(appt.service || '').slice(0, 200),
+      date: new Date(utcMs).toISOString(),
+      duration_min: 30,
+      channel: channel,
+      status: 'pending',
+      notes: String(appt.notes || '').slice(0, 2000),
+      source: 'bot',
+    });
+    $app.dao().saveRecord(rec);
+
+    if (contact) {
+      const st = String(contact.get('status') || '');
+      if (st === 'new' || st === 'contacted') {
+        contact.set('status', 'visit_scheduled');
+        try { $app.dao().saveRecord(contact); } catch (_) {}
+      }
+      try {
+        const timelineCol = $app.dao().findCollectionByNameOrId('timeline_events');
+        $app.dao().saveRecord(new Record(timelineCol, {
+          contact: contact.id,
+          type: 'note',
+          title: 'Randevu oluşturuldu',
+          description: (String(appt.service || 'Keşif görüşmesi') + ' — ' + String(appt.date)).slice(0, 200),
+          ref_id: rec.id,
+          meta: { channel: channel, source: 'bot' },
+        }));
+      } catch (_) {}
+    }
+    return true;
+  }
+
   function botReply(message, history) {
     const intent = detectIntent(message);
     const settings = getBotSettings();
@@ -274,8 +485,7 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
     let reply = '';
     if (apiKey && apiKey.length > 10) {
       try {
-        let sysPrompt = DEFAULT_SYSTEM;
-        if (settings && settings.get('system_prompt')) sysPrompt = settings.get('system_prompt');
+        const sysPrompt = buildSystemPrompt(settings);
 
         const contents = [];
         const hist = (history || []).slice(-8);
@@ -465,7 +675,15 @@ Cevaplarında kısa ve net ol (max 3-4 cümle), samimi ama profesyonel, somut ra
         const name = getMetaProfile(senderId, channel);
         const conv = getOrCreateThread(channel + ':' + senderId, name, channel, channel);
         const history = getHistory(conv.id);
-        const reply = botReply(text, history);
+        let reply = botReply(text, history);
+
+        const ext = extractAppointment(reply);
+        reply = ext.text;
+        if (ext.appt) {
+          const ok = createAppointment(conv, ext.appt, channel);
+          if (!ok) console.log('[webhook/meta] randevu etiketi parse edildi ama kayıt oluşturulamadı');
+        }
+
         saveMessages(conv, text, reply);
         sendMetaReply(senderId, reply);
         handled++;

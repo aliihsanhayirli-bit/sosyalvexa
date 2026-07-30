@@ -17,6 +17,7 @@ const AdminDashboard = lazy(() => import('@/pages/admin/Dashboard'));
 const AdminContacts = lazy(() => import('@/pages/admin/Contacts'));
 const AdminContactDetail = lazy(() => import('@/pages/admin/ContactDetail'));
 const AdminConversations = lazy(() => import('@/pages/admin/Conversations'));
+const AdminAppointments = lazy(() => import('@/pages/admin/Appointments'));
 const AdminBot = lazy(() => import('@/pages/admin/Bot'));
 const AdminUsers = lazy(() => import('@/pages/admin/Users'));
 const AdminSettings = lazy(() => import('@/pages/admin/Settings'));
@@ -52,6 +53,7 @@ export default function App() {
           <Route path="kisiler" element={<AdminContacts />} />
           <Route path="kisiler/:id" element={<AdminContactDetail />} />
           <Route path="konusmalar" element={<AdminConversations />} />
+          <Route path="randevular" element={<AdminAppointments />} />
           <Route path="bot" element={<AdminBot />} />
           <Route path="kullanici" element={<AdminUsers />} />
           <Route path="ayarlar" element={<AdminSettings />} />

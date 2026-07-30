@@ -134,6 +134,31 @@ export interface BotDocument {
   created: string;
 }
 
+export type AppointmentStatus = 'pending' | 'confirmed' | 'cancelled' | 'done';
+
+export interface Appointment {
+  id: string;
+  contact: string;
+  conversation?: string;
+  name: string;
+  phone?: string;
+  service?: string;
+  date: string;
+  duration_min?: number;
+  channel: Channel;
+  status: AppointmentStatus;
+  notes?: string;
+  source: 'bot' | 'admin';
+  created: string;
+}
+
+export const APPOINTMENT_STATUSES: { id: AppointmentStatus; label: string; color: string }[] = [
+  { id: 'pending', label: 'Bekliyor', color: 'bg-amber-400' },
+  { id: 'confirmed', label: 'Onaylandı', color: 'bg-emerald-400' },
+  { id: 'cancelled', label: 'İptal', color: 'bg-zinc-500' },
+  { id: 'done', label: 'Tamamlandı', color: 'bg-blue-400' },
+];
+
 export interface BotSettings {
   id: string;
   system_prompt: string;

@@ -30,15 +30,27 @@
 | # | Hizmet | Slug | Başlangıç | Teslim |
 |---|---|---|---|---|
 | 1 | Meta Business Manager Kurulumu | `meta-business-manager` | 7.500 TL | 3-7 gün |
-| 2 | Kurumsal Web Sitesi | `kurumsal-web-sitesi` | 20.000 TL | 15-30 gün |
+| 2 | Kurumsal Web Sitesi | `kurumsal-web-sitesi` | 22.500 TL | 7-10 gün |
+| 3 | CRM Kurulumu | `crm-kurulumu` | 18.000 TL | 5-10 gün |
+| 4 | Yapay Zeka Asistanı | `yapay-zeka-asistani` | 35.000 TL | 7-15 gün |
+| 5 | VPS Özel Sunucu Kurulumu | `vps-ozel-kurulum` | 7.500 TL | 2-5 gün |
+| 6 | Bakım & Destek | `bakim-destek` | 4.900 TL/ay | Sürekli |
+
+> Hedef pazar: diş klinikleri, fizik tedavi merkezleri, güzellik merkezleri + KOBİ. Tüm fiyatlara %20 KDV eklenir.
 
 ## Fiyat Paketleri
 
-| Paket | Kurulum | Aylık |
-|---|---|---|
-| Başlangıç | 15.000 - 25.000 TL | 5.000 - 8.000 TL |
-| Profesyonel (öne çıkan) | 40.000 - 75.000 TL | 15.000 - 25.000 TL |
-| Kurumsal | 100.000 - 200.000+ TL | 30.000 - 60.000 TL |
+| Paket | Fiyat (tek sefer) | Liste Değeri | Teslim |
+|---|---|---|---|
+| Dijital Başlangıç | 69.900 TL + KDV | 112.000 TL | 7-10 iş günü |
+| Dijital Klinik Pro (öne çıkan) | 149.900 TL + KDV | 356.000 TL | 15-25 iş günü |
+
+Bakım: Standart 4.900 TL/ay · Premium 9.900 TL/ay. İsteğe bağlı modüller `ADDON_MODULES`'te.
+Çalışma şartları: %50 peşinat havale/EFT + %50 teslimde · 2 revizyon · lisans Vexabiz'de (kullanım hakkı satılır). Sözleşme şablonu: `docs/SOZLESME.md`.
+
+## AI Randevu Sistemi
+
+Bot müşteriyle gün+saat netleştirip onay alınca yanıt sonuna `[[RANDEVU:{...}]]` etiketi yazar; `chat.pb.js` bunu parse edip `appointments` koleksiyonuna `pending` kaydı açar (web + IG/Messenger). Etiket müşteriye gösterilmez. Admin `/admin/randevular`'dan onaylar/iptal eder. Çalışma saatleri prompt'ta: Pzt-Cmt 09:00-19:00. Tarih hesabı runtime'da prompt'a eklenir (Türkiye saati).
 
 ## Referanslar (sosyal kanıt)
 
@@ -76,7 +88,7 @@ gyd/
 │   │   └── chat/          # ChatWidget
 │   ├── pages/
 │   │   ├── site/          # Home, About, Services, ServiceDetail, Packages, References, Contact, KVKK
-│   │   └── admin/         # Dashboard, Contacts, Conversations, Bot, Users, Settings
+│   │   └── admin/         # Dashboard, Contacts, Conversations, Appointments, Bot, Users, Settings
 │   ├── lib/               # pb, utils, constants ← şirket bilgileri
 │   ├── types/             # TypeScript tipleri
 │   ├── styles/            # globals.css
@@ -84,7 +96,7 @@ gyd/
 │   └── main.tsx
 ├── backend/
 │   ├── pocketbase*        # binary
-│   ├── pb_migrations/     # PocketBase koleksiyon şemaları (17 adet)
+│   ├── pb_migrations/     # PocketBase koleksiyon şemaları (20 adet)
 │   ├── pb_hooks/          # chat API + Meta webhook (chat.pb.js) + mesaj/contact otomasyonu
 │   └── pb_data/           # SQLite (git'lenmez)
 ├── vite/api-plugin.js     # dev /api/chat, /api/webhook/meta
@@ -155,7 +167,7 @@ npm run deploy:prod          # build → /var/www/vexabiz-sos/dist + PB hooks/mi
 - Yeni sosyal link → `COMPANY.social` + `Footer.tsx` lucide ikonu import et
 - Renk değişikliği → `globals.css` `--accent` ve `tailwind.config.js` `gold` skalası birlikte
 - Logo değişikliği → `public/logo.png` (PNG, şeffaf arka plan, kare 512×512+)
-- AI prompt değişikliği → hem `src/pages/admin/Bot.tsx DEFAULT_PROMPT` hem `vite/api-plugin.js SYSTEM_PROMPT`
+- AI prompt değişikliği → 4 kopya birlikte: `backend/pb_hooks/chat.pb.js DEFAULT_SYSTEM` (×2 route) + `src/pages/admin/Bot.tsx DEFAULT_PROMPT` + `vite/api-plugin.js SYSTEM_PROMPT`. Prod DB'deki `bot_settings.system_prompt` kodu ezer — içerik değişikliğinde yeni bir prompt migration'ı gerekir (bkz. 1700000020)
 
 ## Bilinen Pre-existing Sorunlar
 

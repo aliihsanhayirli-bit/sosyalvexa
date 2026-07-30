@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Inbox, MessageSquare, TrendingUp, Eye, Bot, ArrowUpRight, Building2, Phone } from 'lucide-react';
+import { Users, Inbox, MessageSquare, CalendarDays, Eye, Bot, ArrowUpRight, Building2, Phone } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { pb } from '@/lib/pb';
@@ -27,27 +27,29 @@ const CHANNEL_DATA = [
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
-    submissions: 0, contacts: 0, conversations: 0, revenue: 0,
-    newContacts: 0, unread: 0, conversion: 24,
+    submissions: 0, contacts: 0, conversations: 0, appointments: 0, revenue: 0,
+    newContacts: 0, unread: 0,
   });
 
   useEffect(() => {
     (async () => {
       try {
-        const [sub, c, conv] = await Promise.all([
+        const [sub, c, conv, appt] = await Promise.all([
           pb.collection('contact_submissions').getList(1, 1, {}),
           pb.collection('contacts').getList(1, 1, {}),
           pb.collection('conversations').getList(1, 1, {}),
+          pb.collection('appointments').getList(1, 1, { filter: 'status = "pending"' }),
         ]);
         setStats((s) => ({
           ...s,
           submissions: sub.totalItems,
           contacts: c.totalItems,
           conversations: conv.totalItems,
+          appointments: appt.totalItems,
         }));
       } catch {
         // PocketBase bağlı değilse demo veriler
-        setStats((s) => ({ ...s, submissions: 12, contacts: 127, conversations: 89 }));
+        setStats((s) => ({ ...s, submissions: 12, contacts: 127, conversations: 89, appointments: 3 }));
       }
     })();
   }, []);
@@ -56,7 +58,7 @@ export default function AdminDashboard() {
     { label: 'Form Başvurusu', value: stats.submissions, delta: '+12%', icon: Inbox, color: 'text-emerald-400' },
     { label: 'Toplam Lead', value: stats.contacts, delta: '+24%', icon: Users, color: 'text-cyan-400' },
     { label: 'Açık Konuşma', value: stats.conversations, delta: '+8%', icon: MessageSquare, color: 'text-violet-400' },
-    { label: 'Dönüşüm Oranı', value: `%${stats.conversion}`, delta: '+3%', icon: TrendingUp, color: 'text-gold-300' },
+    { label: 'Bekleyen Randevu', value: stats.appointments, icon: CalendarDays, color: 'text-gold-300' },
   ];
 
   return (

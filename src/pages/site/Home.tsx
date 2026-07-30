@@ -10,11 +10,11 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { SERVICES, STATS, REFERENCES, VALUE_PROPS, COMPANY } from '@/lib/constants';
 import {
-  Facebook, Globe, Users, Bot as BotIcon, Rocket,
+  Facebook, Globe, Users, Bot as BotIcon, Rocket, Server, Wrench,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, typeof Facebook> = {
-  Facebook, Globe, Users, Bot: BotIcon, Rocket,
+  Facebook, Globe, Users, Bot: BotIcon, Rocket, Server, Wrench,
 };
 
 const WHY = [
@@ -68,7 +68,7 @@ export default function Home() {
             İşletmeniz için <span className="gold-text italic">uçtan uca dijital</span>
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-foreground/60">
-            Meta Business Manager kurulumundan kurumsal web sitesine — 1 kerede tam.
+            Meta altyapısından yapay zeka asistanına — 1 kerede tam.
           </p>
         </motion.div>
 

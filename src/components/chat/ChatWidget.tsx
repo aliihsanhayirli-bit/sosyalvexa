@@ -24,12 +24,12 @@ const INITIAL: Msg = {
   id: 'init',
   role: 'bot',
   ts: Date.now(),
-  content: `Merhaba, ben Vexabiz Asistan 👋\n\n${COMPANY.brand} olarak Türkiye genelinde işletmelere **Meta Business Manager kurulumu**, **kurumsal web sitesi**, **CRM** ve **yapay zeka çalışanı** hizmetleri sunuyoruz.\n\nHangi hizmetimiz hakkında bilgi almak istersiniz?`,
+  content: `Merhaba, ben Vexabiz Asistan 👋\n\n${COMPANY.brand} olarak klinikler ve işletmeler için **web sitesi, CRM, yapay zeka asistanı ve Meta altyapısını** tek pakette kuruyoruz.\n\nSize nasıl yardımcı olabilirim?`,
   suggestions: [
-    'Meta Business Manager kurulumu',
-    'Kurumsal web sitesi',
-    'CRM kurulumu',
-    'Yapay zeka çalışanı',
+    'Dijital Başlangıç Paketi',
+    'Dijital Klinik Pro',
+    'Randevu almak istiyorum',
+    'Bakım paketleri',
   ],
 };
 
