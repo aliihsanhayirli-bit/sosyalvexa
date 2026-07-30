@@ -78,7 +78,7 @@ export default function AdminAppointments() {
             Yapay zeka asistanının oluşturduğu randevular · son teyit sizde
           </p>
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {FILTERS.map((f) => (
             <button
               key={f.id}

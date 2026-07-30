@@ -1,7 +1,7 @@
-import { Outlet, NavLink, Link, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import {
-  LayoutDashboard, Users, MessageSquare, CalendarDays, Bot, UserCog, Settings, LogOut, Building2, Bell,
+  LayoutDashboard, Users, MessageSquare, CalendarDays, Bot, UserCog, Settings, LogOut, Building2, Bell, Menu, X,
 } from 'lucide-react';
 import { pb } from '@/lib/pb';
 import { cn } from '@/lib/utils';
@@ -18,8 +18,14 @@ const NAV = [
 
 export default function AdminLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
   // @ts-expect-error - PB v0.21+ uses 'model', fallback to 'record' for older versions
   const [user, setUser] = useState<Record<string, unknown> | null>(pb.authStore.model || pb.authStore.record);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     const unsub = pb.authStore.onChange(() => {
@@ -93,9 +99,16 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <header className="flex h-20 shrink-0 items-center justify-between border-b border-white/[0.06] bg-card/30 px-6 backdrop-blur-xl">
+      <div className="relative flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-20 shrink-0 items-center justify-between border-b border-white/[0.06] bg-card/30 px-4 sm:px-6 backdrop-blur-xl">
           <div className="flex items-center gap-2 lg:hidden">
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] text-foreground/80 hover:bg-white/5"
+              aria-label="Menüyü aç/kapat"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
             <Building2 className="h-5 w-5 text-accent" />
             <span className="font-display font-semibold">Vexabiz Admin</span>
           </div>
@@ -104,15 +117,46 @@ export default function AdminLayout() {
             <div className="font-display text-lg font-semibold">Hoş geldiniz</div>
           </div>
           <div className="flex items-center gap-3">
-            <button className="relative flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] text-foreground/70 hover:text-foreground">
+            <button className="relative flex h-9 w-9 items-center justify-center rounded-md border border-white/[0.08] text-foreground/70 hover:text-foreground" aria-label="Bildirimler">
               <Bell className="h-4 w-4" />
               <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-rose-500" />
             </button>
-            <Link to="/" target="_blank" className="text-xs text-muted-foreground hover:text-accent">
-              Siteyu Görüntüle →
+            <Link to="/" target="_blank" className="hidden text-xs text-muted-foreground hover:text-accent sm:block">
+              Siteyi Görüntüle →
             </Link>
           </div>
         </header>
+
+        {menuOpen && (
+          <div className="absolute inset-x-0 top-20 z-30 border-b border-white/[0.06] bg-card/95 backdrop-blur-xl lg:hidden">
+            <nav className="space-y-1 p-4">
+              {NAV.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.end}
+                  className={({ isActive }) =>
+                    cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                      isActive
+                        ? 'bg-accent/10 text-accent border border-accent/20'
+                        : 'text-foreground/70 hover:bg-white/[0.04] hover:text-foreground border border-transparent',
+                    )
+                  }
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </NavLink>
+              ))}
+              <button
+                onClick={logout}
+                className="mt-2 flex w-full items-center gap-3 rounded-lg border border-transparent px-3 py-2.5 text-sm font-medium text-foreground/70 hover:bg-white/[0.04] hover:text-foreground"
+              >
+                <LogOut className="h-4 w-4" /> Çıkış Yap
+              </button>
+            </nav>
+          </div>
+        )}
 
         <main className="flex-1 overflow-y-auto">
           <Outlet />

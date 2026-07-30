@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Search, Bot, UserCheck, Loader2 } from 'lucide-react';
+import { Search, Bot, UserCheck, Loader2, ArrowLeft } from 'lucide-react';
 import { Card } from '@/components/ui/Card';
 import { Input, Textarea } from '@/components/ui/Form';
 import { Badge } from '@/components/ui/Badge';
@@ -71,7 +71,7 @@ export default function AdminConversations() {
         : list.items;
 
       setConvs(items);
-      if (items.length > 0 && !active) setActive(items[0].id);
+      if (items.length > 0 && !active && window.innerWidth >= 1024) setActive(items[0].id);
     } catch (e) {
       toast.error('Konuşmalar yüklenemedi: ' + (e as Error).message);
     } finally {
@@ -164,9 +164,9 @@ export default function AdminConversations() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-5rem)] p-6 lg:p-8">
+    <div className="flex h-[calc(100vh-5rem)] p-3 sm:p-6 lg:p-8">
       <Card className="flex w-full overflow-hidden">
-        <div className="flex w-80 shrink-0 flex-col border-r border-white/[0.06]">
+        <div className={cn('w-full shrink-0 flex-col lg:flex lg:w-80 lg:border-r lg:border-white/[0.06]', active ? 'hidden' : 'flex')}>
           <div className="border-b border-white/[0.06] p-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -231,12 +231,19 @@ export default function AdminConversations() {
           </div>
         </div>
 
-        <div className="flex flex-1 flex-col">
+        <div className={cn('flex-1 flex-col', active ? 'flex' : 'hidden lg:flex')}>
           {activeConv ? (
             <>
-              <div className="flex items-center justify-between border-b border-white/[0.06] p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-accent/30 to-gold-500/30 font-semibold">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.06] p-3 sm:p-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <button
+                    onClick={() => setActive(null)}
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/[0.08] text-foreground/70 hover:bg-white/5 lg:hidden"
+                    aria-label="Konuşma listesine dön"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </button>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent/30 to-gold-500/30 font-semibold">
                     {activeName.charAt(0)}
                   </div>
                   <div>

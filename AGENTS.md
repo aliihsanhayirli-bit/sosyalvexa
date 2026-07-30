@@ -96,7 +96,7 @@ gyd/
 │   └── main.tsx
 ├── backend/
 │   ├── pocketbase*        # binary
-│   ├── pb_migrations/     # PocketBase koleksiyon şemaları (20 adet)
+│   ├── pb_migrations/     # PocketBase koleksiyon şemaları (21 adet)
 │   ├── pb_hooks/          # chat API + Meta webhook (chat.pb.js) + mesaj/contact otomasyonu
 │   └── pb_data/           # SQLite (git'lenmez)
 ├── vite/api-plugin.js     # dev /api/chat, /api/webhook/meta
